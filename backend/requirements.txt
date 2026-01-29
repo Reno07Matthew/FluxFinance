@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+yfinance
+ccxt
+beautifulsoup4
+requests
+transformers
+torch
+pandas
+streamlit
+plotly
