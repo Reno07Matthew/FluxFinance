@@ -1,140 +1,133 @@
-# ⚡ FluxFinance
+# 🔷 Flux Finance
 
-AI-Powered Financial Analysis Tool combining **FinBERT Sentiment Analysis** with **Technical Indicators** (RSI) to provide intelligent trading insights.
+**AI-Powered Sentiment & Technical Analysis Platform for Financial Markets**
 
-## 🚀 Features
-
-- 📰 **Real-time News Analysis** - Fetches live headlines from Google News
-- 🧠 **AI Sentiment Analysis** - Uses FinBERT to analyze market psychology
-- 📊 **Technical Analysis** - Calculates RSI (Relative Strength Index)
-- 🎯 **Flux Verdict** - Combines sentiment + technicals for actionable insights
-- 💹 **Multi-Market Support** - Stocks (US & India), Crypto
-- ₹💵 **Currency Detection** - Auto-detects INR for Indian stocks, USD for US stocks
-
-## 📁 Project Structure
-
-```
-FluxFinance/Test1/
-│
-├── backend/                   # Backend API
-│   ├── main.py                # FastAPI Gateway
-│   ├── data_provider.py       # Market data & news fetching
-│   ├── ai_engine.py           # FinBERT sentiment analysis
-│   ├── technical_engine.py    # RSI calculations
-│   ├── flux_engine.py         # Verdict logic
-│   └── requirements.txt       # Python dependencies
-│
-└── frontend/                  # Frontend UI
-    └── app.py                 # Streamlit dashboard
-```
-
-## 🛠️ Installation
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/YOUR_USERNAME/FluxFinance.git
-cd FluxFinance/Test1
-```
-
-### 2. Create virtual environment
-
-```bash
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-### 3. Install dependencies
-
-```bash
-pip install -r backend/requirements.txt
-```
-
-> **Note:** This will download ~2GB of packages including PyTorch and FinBERT model.
-
-## 🏃 Running the Application
-
-### Start Backend (Terminal 1)
-
-```bash
-source venv/bin/activate
-cd backend
-uvicorn main:app --reload
-```
-
-Backend will run on `http://127.0.0.1:8000`
-
-### Start Frontend (Terminal 2)
-
-```bash
-source venv/bin/activate
-streamlit run frontend/app.py
-```
-
-Frontend will open automatically in your browser.
-
-## 📖 Usage
-
-1. Enter a stock ticker:
-   - **Indian stocks:** `INFY`, `TCS`, `RELIANCE`
-   - **US stocks:** `TSLA`, `AAPL`, `GOOGL`
-   - **Crypto:** `BTC`, `ETH`, `SOL`
-
-2. Select asset type (stock/crypto)
-
-3. Click "🔍 Run Flux Analysis"
-
-4. View results:
-   - Current price (₹ or $)
-   - AI Sentiment Score (-1 to +1)
-   - RSI (0-100)
-   - Flux Verdict
-   - Live news headlines
-   - Price chart
-
-## 🧠 How It Works
-
-### AI Sentiment Analysis
-- Fetches 8 recent news headlines from Google News
-- Uses **FinBERT** (financial BERT model) to analyze sentiment
-- Returns score from -1 (very negative) to +1 (very positive)
-
-### Technical Analysis (RSI)
-- Calculates 14-day Relative Strength Index
-- **RSI < 30** = Oversold (potential buy)
-- **RSI > 70** = Overbought (potential sell)
-- **RSI 30-70** = Neutral
-
-### Flux Verdict
-Combines both signals:
-- 🚨 **HYPE WARNING** - High sentiment + High RSI (overbought)
-- 💎 **VALUE OPPORTUNITY** - Low sentiment + Low RSI (undervalued)
-- ✅ **HEALTHY GROWTH** - Positive sentiment + Normal RSI
-- 📉 **BEARISH TREND** - Negative sentiment + Dropping price
-
-## 📦 Dependencies
-
-- **FastAPI** - Backend API framework
-- **Streamlit** - Frontend dashboard
-- **yfinance** - Stock market data
-- **ccxt** - Cryptocurrency data
-- **transformers** - Hugging Face (FinBERT)
-- **torch** - PyTorch for AI models
-- **pandas** - Data processing
-- **beautifulsoup4** - Web scraping for news
-
-## ⚠️ Disclaimer
-
-This tool is for **educational purposes only**. It is NOT financial advice. Always do your own research before making investment decisions.
-
-## 📄 License
-
-MIT License - feel free to use and modify!
-
-## 🤝 Contributing
-
-Contributions welcome! Please open an issue or submit a pull request.
+Flux Finance combines AI-based market sentiment analysis (FinBERT, NLP) with technical indicators (RSI) to provide intelligent investment insights.
 
 ---
 
-**Made with ❤️ using FinBERT, FastAPI, and Streamlit**
+## ✨ Features
+
+- **AI Sentiment Analysis** - FinBERT model analyzes live news headlines
+- **Technical Indicators** - RSI calculation with overbought/oversold signals
+- **Flux Verdict** - Compares psychology (sentiment) vs reality (technicals)
+- **Live News Feed** - Real-time headlines from Google News
+- **Multi-Asset Support** - Indian stocks (NSE) and Cryptocurrencies
+- **Modern UI** - Dark theme React dashboard with TailwindCSS
+
+---
+
+## 🏗️ Project Structure
+
+```
+FluxFinance/
+├── backend/                 # Python FastAPI
+│   ├── main.py              # API endpoints + CORS
+│   ├── ai_engine.py         # FinBERT sentiment analysis
+│   ├── data_provider.py     # Stock/Crypto data (yfinance, ccxt)
+│   ├── technical_engine.py  # RSI calculation
+│   ├── flux_engine.py       # Verdict logic
+│   └── requirements.txt     # Python dependencies
+│
+├── frontend/                # React + Vite + TailwindCSS
+│   ├── src/
+│   │   ├── app/App.tsx      # Main app component
+│   │   ├── context/         # React state management
+│   │   ├── services/api.ts  # Backend API integration
+│   │   └── components/      # UI components
+│   ├── package.json
+│   └── vite.config.ts
+│
+└── venv/                    # Python virtual environment
+```
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.10+
+- Node.js 18+
+- npm
+
+### Backend Setup
+```bash
+cd backend
+python -m venv ../venv
+source ../venv/bin/activate    # Linux/Mac
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
+```
+
+### Frontend Setup
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### Access
+- **Frontend:** http://localhost:3000
+- **Backend API:** http://localhost:8000
+
+---
+
+## � API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Health check |
+| `/analyze?symbol=RELIANCE&type=stock` | GET | Full analysis |
+
+### Sample Response
+```json
+{
+  "symbol": "RELIANCE",
+  "price": 1456.8,
+  "currency": "INR",
+  "sentiment": { "score": 0.65, "label": "Positive" },
+  "technical": { "rsi": 45.2, "signal": "Neutral" },
+  "verdict": {
+    "status": "✅ HEALTHY UPTREND",
+    "flux_score": 30,
+    "description": "Positive sentiment with stable technicals"
+  },
+  "headlines": ["...", "..."],
+  "history": [1400, 1420, ...]
+}
+```
+
+---
+
+## 🎨 Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 18, Vite, TailwindCSS, Recharts |
+| Backend | FastAPI, Python 3.10 |
+| AI/ML | HuggingFace Transformers, FinBERT |
+| Data | yfinance, ccxt, Google News RSS |
+
+---
+
+## 📈 Flux Verdict Logic
+
+| Condition | Verdict | Flux Score |
+|-----------|---------|------------|
+| High Sentiment + High RSI | � HYPE WARNING | 90 |
+| Low Sentiment + Low RSI | 💎 VALUE OPPORTUNITY | 10 |
+| Positive Sentiment + Neutral RSI | ✅ HEALTHY UPTREND | 30 |
+| Negative Sentiment + Low RSI | � BEARISH TREND | 80 |
+| Mixed Signals | ⚖️ MARKET NEUTRAL | 50 |
+
+---
+
+## � License
+
+MIT License - Free for personal and commercial use.
+
+---
+
+## 👨‍💻 Author
+
+Built with ❤️ using AI-powered analysis.
