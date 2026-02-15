@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from data_provider import get_market_data
+from data_provider import get_market_data, search_symbols, get_batch_market_data
 from ai_engine import analyze_sentiment
 from technical_engine import calculate_technicals
 from flux_engine import calculate_flux_verdict
@@ -19,6 +19,67 @@ app.add_middleware(
 @app.get("/")
 def root():
     return {"status": "Flux Finance API is running", "version": "1.0"}
+
+@app.get("/search")
+def search(q: str = ""):
+    """Search for assets by name or symbol. Returns matching results."""
+    results = search_symbols(q)
+    return {"results": results}
+
+@app.get("/markets")
+def markets(category: str = "stock"):
+    """Get batch market data for stocks or crypto."""
+    data = get_batch_market_data(category)
+    return {"assets": data}
+
+@app.get("/portfolio/prices")
+def portfolio_prices(symbols: str = ""):
+    """Get current prices for a list of symbols (comma-separated)."""
+    from data_provider import SEARCHABLE_ASSETS, INDEX_SYMBOLS, INDIAN_STOCKS
+    import yfinance as yf
+    
+    symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+    results = {}
+    
+    for sym in symbol_list:
+        try:
+            info = SEARCHABLE_ASSETS.get(sym, {})
+            asset_type = info.get('type', 'stock')
+            
+            if asset_type == 'crypto':
+                pair = f"{sym}/USDT"
+                ticker = exchange.fetch_ticker(pair)
+                results[sym] = {
+                    "price": round(ticker.get('last', 0), 2),
+                    "currency": "USD",
+                    "name": info.get('name', sym),
+                    "change": round(ticker.get('percentage', 0) or 0, 2)
+                }
+            else:
+                if sym in INDEX_SYMBOLS:
+                    yf_sym = INDEX_SYMBOLS[sym]
+                elif sym in INDIAN_STOCKS:
+                    yf_sym = f"{sym}.NS"
+                else:
+                    yf_sym = sym
+                
+                stock = yf.Ticker(yf_sym)
+                hist = stock.history(period="5d")
+                if not hist.empty:
+                    current = round(float(hist['Close'].iloc[-1]), 2)
+                    prev = round(float(hist['Close'].iloc[-2]), 2) if len(hist) >= 2 else current
+                    change = round(((current - prev) / prev) * 100, 2) if prev else 0
+                    is_indian = sym in INDIAN_STOCKS or (sym in INDEX_SYMBOLS and INDEX_SYMBOLS.get(sym, '') in ('^NSEI', '^BSESN', '^NSEBANK', '^CNXIT'))
+                    results[sym] = {
+                        "price": current,
+                        "currency": "INR" if is_indian else "USD",
+                        "name": info.get('name', sym),
+                        "change": change
+                    }
+        except Exception as e:
+            print(f"Error fetching price for {sym}: {e}")
+    
+    return {"prices": results}
 
 @app.get("/analyze")
 def analyze(symbol: str, type: str = "stock"):

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/app/components/Header';
+import { Home } from '@/app/components/Home';
 import { DashboardOverview } from '@/app/components/DashboardOverview';
 import { TechnicalChart } from '@/app/components/TechnicalChart';
 import { SentimentSection } from '@/app/components/SentimentSection';
@@ -11,7 +12,7 @@ import { MarketProvider, useMarket } from '@/context/MarketContext';
 import { analyzeAsset } from '@/services/api';
 
 function AppContent() {
-  const [currentPage, setCurrentPage] = useState('Dashboard');
+  const [currentPage, setCurrentPage] = useState('Home');
   const { data, setData, loading, setLoading, error, setError, symbol, assetType } = useMarket();
 
   const fetchData = async () => {
@@ -31,10 +32,18 @@ function AppContent() {
   };
 
   useEffect(() => {
-    fetchData();
-  }, [symbol, assetType]);
+    // Only fetch analysis data when on Dashboard or analysis pages
+    if (['Dashboard', 'Sentiment', 'Technical', 'Risk'].includes(currentPage)) {
+      fetchData();
+    }
+  }, [symbol, assetType, currentPage]);
 
   const renderContent = () => {
+    // Home page doesn't need loading/error states
+    if (currentPage === 'Home') {
+      return <Home onNavigate={setCurrentPage} />;
+    }
+
     if (loading) {
       return (
         <div className="flex items-center justify-center h-64">
@@ -62,7 +71,7 @@ function AppContent() {
 
     switch (currentPage) {
       case 'Markets':
-        return <Markets />;
+        return <Markets onNavigate={setCurrentPage} />;
       case 'Sentiment':
         return (
           <div className="space-y-6">

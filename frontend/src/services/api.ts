@@ -27,11 +27,58 @@ export interface AnalysisData {
     history: number[];
 }
 
+export interface SearchResult {
+    symbol: string;
+    name: string;
+    type: string;
+    exchange: string;
+}
+
 export const analyzeAsset = async (symbol: string, type: string = 'stock'): Promise<AnalysisData> => {
     const response = await axios.get(`${API_BASE}/analyze`, {
         params: { symbol, type }
     });
     return response.data;
+};
+
+export const searchAssets = async (query: string): Promise<SearchResult[]> => {
+    if (!query || query.length < 1) return [];
+    const response = await axios.get(`${API_BASE}/search`, {
+        params: { q: query }
+    });
+    return response.data.results;
+};
+
+export interface MarketAsset {
+    symbol: string;
+    name: string;
+    price: number;
+    change: number;
+    currency: string;
+    exchange: string;
+    type: string;
+}
+
+export const getMarkets = async (category: string = 'stock'): Promise<MarketAsset[]> => {
+    const response = await axios.get(`${API_BASE}/markets`, {
+        params: { category }
+    });
+    return response.data.assets;
+};
+
+export interface PriceData {
+    price: number;
+    currency: string;
+    name: string;
+    change: number;
+}
+
+export const getPortfolioPrices = async (symbols: string[]): Promise<Record<string, PriceData>> => {
+    if (!symbols.length) return {};
+    const response = await axios.get(`${API_BASE}/portfolio/prices`, {
+        params: { symbols: symbols.join(',') }
+    });
+    return response.data.prices;
 };
 
 export const checkHealth = async () => {
