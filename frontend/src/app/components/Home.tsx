@@ -6,9 +6,10 @@ import { searchAssets, SearchResult, getMarkets, MarketAsset } from '@/services/
 
 interface HomeProps {
     onNavigate: (page: string) => void;
+    onAnalyze?: () => void;
 }
 
-export const Home = ({ onNavigate }: HomeProps) => {
+export const Home = ({ onNavigate, onAnalyze }: HomeProps) => {
     const { setSymbol, setAssetType } = useMarket();
     const [searchValue, setSearchValue] = useState('');
     const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
@@ -67,7 +68,8 @@ export const Home = ({ onNavigate }: HomeProps) => {
     const goToAsset = (sym: string, type: string = 'stock') => {
         setSymbol(sym);
         setAssetType(type);
-        onNavigate('Dashboard');
+        onNavigate('Analysis');
+        if (onAnalyze) setTimeout(() => onAnalyze(), 50);
     };
 
     const handleSearchSelect = (result: SearchResult) => {
@@ -271,10 +273,10 @@ export const Home = ({ onNavigate }: HomeProps) => {
                             <NewsCard key={i} {...item} />
                         ))}
                         <button
-                            onClick={() => onNavigate('Sentiment')}
+                            onClick={() => onNavigate('Analysis')}
                             className="w-full py-3 text-sm text-slate-400 hover:text-white border border-slate-800 rounded-xl hover:bg-slate-800/50 transition-all flex items-center justify-center gap-2"
                         >
-                            View All Sentiment <ArrowRight size={14} />
+                            View Full Analysis <ArrowRight size={14} />
                         </button>
                     </div>
                 </motion.div>
@@ -341,10 +343,10 @@ export const Home = ({ onNavigate }: HomeProps) => {
                                 <div
                                     key={s.name}
                                     className={`p-2 rounded text-xs font-bold text-center border ${s.positive === true
-                                            ? 'bg-green-500/15 text-green-400 border-green-500/25'
-                                            : s.positive === false
-                                                ? 'bg-red-500/15 text-red-400 border-red-500/25'
-                                                : 'bg-slate-700/20 text-slate-400 border-slate-700/50'
+                                        ? 'bg-green-500/15 text-green-400 border-green-500/25'
+                                        : s.positive === false
+                                            ? 'bg-red-500/15 text-red-400 border-red-500/25'
+                                            : 'bg-slate-700/20 text-slate-400 border-slate-700/50'
                                         }`}
                                 >
                                     <div className="text-[10px] text-slate-500 mb-0.5">{s.name}</div>
@@ -407,8 +409,8 @@ const NewsCard = ({ source, time, headline, sentiment }: {
                 <span className="text-[10px] text-slate-500">• {time}</span>
             </div>
             <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${sentiment === 'Positive' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
-                    sentiment === 'Negative' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
-                        'bg-slate-700/50 text-slate-400 border border-slate-700'
+                sentiment === 'Negative' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
+                    'bg-slate-700/50 text-slate-400 border border-slate-700'
                 }`}>{sentiment === 'Positive' ? '📈 Bullish' : sentiment === 'Negative' ? '📉 Bearish' : '⚖️ Neutral'}</span>
         </div>
         <h3 className="text-sm font-medium text-slate-200 leading-snug group-hover:text-blue-300 transition-colors">

@@ -14,16 +14,34 @@ export interface AnalysisData {
     technical: {
         rsi: number;
         signal: string;
+        // 7-indicator fields (may be null for crypto/short-history)
+        sma_200?: number | null;
+        ema_50?: number | null;
+        vwap?: number | null;
+        supertrend_dir?: number | null; // 1 = Up, -1 = Down
     };
     verdict: {
+        // New consensus fields
+        verdict: string;     // "STRONG BUY" | "HIGH RISK (AVOID)" | "HOLD / NEUTRAL"
+        flux_score: number;
+        color: string;
         status: string;
         description: string;
-        color: string;
-        flux_score: number;
+        current_price?: number;
+        risk_management?: {
+            target_exit_R1: number;
+            stop_loss_S1: number;
+            pivot: number;
+        } | null;
+        analysis?: {
+            strengths: string[];
+            warnings: string[];
+        };
+        // Legacy fields
         sentiment_score: number;
         rsi_score: number;
     };
-    headlines: string[];
+    headlines: { title: string; url: string }[];
     history: number[];
 }
 

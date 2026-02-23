@@ -1,9 +1,15 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from data_provider import get_market_data, search_symbols, get_batch_market_data
 from ai_engine import analyze_sentiment
-from technical_engine import calculate_technicals
-from flux_engine import calculate_flux_verdict
+from technical_engine import calculate_flux_indicators, calculate_technicals
+from flux_engine import calculate_flux_verdict, generate_flux_verdict
+from streamer import get_quick_stock_snapshot, get_quick_crypto_snapshot
+
+import yfinance as yf
+import pandas as pd
+import asyncio
+import json
 
 app = FastAPI()
 
@@ -18,7 +24,7 @@ app.add_middleware(
 
 @app.get("/")
 def root():
-    return {"status": "Flux Finance API is running", "version": "1.0"}
+    return {"status": "Flux Finance API is running", "version": "2.0"}
 
 @app.get("/search")
 def search(q: str = ""):
@@ -36,24 +42,25 @@ def markets(category: str = "stock"):
 def portfolio_prices(symbols: str = ""):
     """Get current prices for a list of symbols (comma-separated)."""
     from data_provider import SEARCHABLE_ASSETS, INDEX_SYMBOLS, INDIAN_STOCKS
-    import yfinance as yf
-    
+    from ccxt import binance
+    exchange = binance()
+
     symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
     results = {}
-    
+
     for sym in symbol_list:
         try:
             info = SEARCHABLE_ASSETS.get(sym, {})
             asset_type = info.get('type', 'stock')
-            
+
             if asset_type == 'crypto':
                 pair = f"{sym}/USDT"
                 ticker = exchange.fetch_ticker(pair)
                 results[sym] = {
-                    "price": round(ticker.get('last', 0), 2),
+                    "price":    round(ticker.get('last', 0), 2),
                     "currency": "USD",
-                    "name": info.get('name', sym),
-                    "change": round(ticker.get('percentage', 0) or 0, 2)
+                    "name":     info.get('name', sym),
+                    "change":   round(ticker.get('percentage', 0) or 0, 2)
                 }
             else:
                 if sym in INDEX_SYMBOLS:
@@ -62,65 +69,184 @@ def portfolio_prices(symbols: str = ""):
                     yf_sym = f"{sym}.NS"
                 else:
                     yf_sym = sym
-                
+
                 stock = yf.Ticker(yf_sym)
-                hist = stock.history(period="5d")
+                hist  = stock.history(period="5d")
                 if not hist.empty:
                     current = round(float(hist['Close'].iloc[-1]), 2)
-                    prev = round(float(hist['Close'].iloc[-2]), 2) if len(hist) >= 2 else current
-                    change = round(((current - prev) / prev) * 100, 2) if prev else 0
-                    is_indian = sym in INDIAN_STOCKS or (sym in INDEX_SYMBOLS and INDEX_SYMBOLS.get(sym, '') in ('^NSEI', '^BSESN', '^NSEBANK', '^CNXIT'))
+                    prev    = round(float(hist['Close'].iloc[-2]), 2) if len(hist) >= 2 else current
+                    change  = round(((current - prev) / prev) * 100, 2) if prev else 0
+                    is_indian = sym in INDIAN_STOCKS or (
+                        sym in INDEX_SYMBOLS and
+                        INDEX_SYMBOLS.get(sym, '') in ('^NSEI', '^BSESN', '^NSEBANK', '^CNXIT')
+                    )
                     results[sym] = {
-                        "price": current,
+                        "price":    current,
                         "currency": "INR" if is_indian else "USD",
-                        "name": info.get('name', sym),
-                        "change": change
+                        "name":     info.get('name', sym),
+                        "change":   change
                     }
         except Exception as e:
             print(f"Error fetching price for {sym}: {e}")
-    
+
     return {"prices": results}
 
 @app.get("/analyze")
 def analyze(symbol: str, type: str = "stock"):
     try:
-        # 1. Get Data
+        from data_provider import INDEX_SYMBOLS, INDIAN_STOCKS
+
+        # ── 1. Get News + Basic Price (for headlines) ──
         data = get_market_data(symbol, type)
         if data is None:
             return {"error": "Failed to fetch market data"}
         if "error" in data:
             return data
-        
-        # 2. Check if we have history data
-        if not data.get('history') or len(data['history']) == 0:
-            return {"error": f"No price history found for {symbol}. Please check the ticker symbol."}
-        
-        # 3. Run Analysis
-        sentiment = analyze_sentiment(data['headlines'])
-        if sentiment is None:
+
+        headlines = data.get('headlines', [])
+        currency  = data.get('currency', 'USD')
+        is_indian = data.get('is_indian', False)
+
+        # ── 2. AI Sentiment ── (FinBERT needs plain text strings)
+        headline_titles = [h['title'] if isinstance(h, dict) else h for h in headlines]
+        sentiment = analyze_sentiment(headline_titles)
+        if not sentiment:
             sentiment = {"score": 0, "label": "Neutral"}
-        
-        tech = calculate_technicals(data['history'])
-        if tech is None:
-            tech = {"rsi": 50, "signal": "Neutral"}
-        
-        # 4. The Flux Verdict
-        verdict = calculate_flux_verdict(
-            sentiment_score=sentiment['score'],
-            sentiment_label=sentiment['label'],
-            rsi_value=tech['rsi']
-        )
-        
+
+        ai_score = float(sentiment.get('score', 0))
+
+        # ── 3. Try full 7-indicator analysis (requires OHLCV + 1 year of data) ──
+        verdict = None
+        tech_summary = {"rsi": 50, "signal": "Neutral"}
+
+        if type != "crypto":
+            try:
+                sym_upper = symbol.upper().replace('.NS', '').replace('.BO', '')
+                if sym_upper in INDEX_SYMBOLS:
+                    yf_sym = INDEX_SYMBOLS[sym_upper]
+                elif sym_upper in INDIAN_STOCKS:
+                    yf_sym = f"{sym_upper}.NS"
+                else:
+                    yf_sym = sym_upper
+
+                stock = yf.Ticker(yf_sym)
+                df    = stock.history(period="2y")  # 2 years to ensure 200-day SMA
+
+                if not df.empty and len(df) >= 15:
+                    df_enriched = calculate_flux_indicators(df)
+
+                    if len(df_enriched) >= 2:
+                        # Full 7-indicator verdict
+                        verdict = generate_flux_verdict(df_enriched, ai_score)
+
+                        # Extract technical summary from enriched df
+                        latest = df_enriched.iloc[-1]
+                        rsi_val = float(latest.get('RSI', 50))
+                        signal  = "Neutral"
+                        if rsi_val > 70:  signal = "Overbought"
+                        elif rsi_val < 30: signal = "Oversold"
+
+                        tech_summary = {
+                            "rsi":           round(rsi_val, 2),
+                            "signal":        signal,
+                            "sma_200":       round(float(latest['SMA_200']), 2) if 'SMA_200' in latest else None,
+                            "ema_50":        round(float(latest['EMA_50']), 2)  if 'EMA_50'  in latest else None,
+                            "vwap":          round(float(latest['VWAP']), 2)    if 'VWAP'    in latest else None,
+                            "supertrend_dir": int(latest['SuperTrend_Dir'])     if 'SuperTrend_Dir' in latest and not pd.isna(latest['SuperTrend_Dir']) else None,
+                        }
+
+            except Exception as e:
+                print(f"Full indicator analysis failed for {symbol}, falling back: {e}")
+
+        # ── 4. Fallback: legacy RSI-only verdict ──
+        if verdict is None:
+            history = data.get('history', [])
+            tech_summary = calculate_technicals(history)
+            verdict = calculate_flux_verdict(
+                sentiment_score=ai_score,
+                sentiment_label=sentiment['label'],
+                rsi_value=tech_summary['rsi']
+            )
+
+        # ── 5. Build Response ──
+        history = data.get('history', [])
+        current_price = data.get('price', verdict.get('current_price', 0))
+
         return {
-            "symbol": data['symbol'],
-            "price": data['price'],
-            "currency": data.get('currency', 'USD'),
-            "is_indian": data.get('is_indian', False),
+            "symbol":    data.get('symbol', symbol.upper()),
+            "price":     current_price,
+            "currency":  currency,
+            "is_indian": is_indian,
             "sentiment": sentiment,
-            "technical": tech,
-            "verdict": verdict,
-            "headlines": data['headlines'],
-            "history": data['history']
+            "technical": tech_summary,
+            "verdict":   verdict,
+            "headlines": headlines,
+            "history":   history,
         }
+
     except Exception as e:
         return {"error": str(e)}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  LIVE PRICE STREAM  ·  WebSocket  /ws/live/{symbol}?type=stock|crypto
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.websocket("/ws/live/{symbol}")
+async def live_price_websocket(websocket: WebSocket, symbol: str, type: str = "stock"):
+    """
+    Streams a lightweight price + quick-technical snapshot every 5 s.
+    Payload:
+        { symbol, price, prev_close, change_pct, currency,
+          rsi, supertrend_dir, timestamp }
+    """
+    await websocket.accept()
+
+    from data_provider import INDEX_SYMBOLS, INDIAN_STOCKS
+
+    sym_upper = symbol.upper()
+    is_indian = False
+    yf_sym    = sym_upper
+
+    if type != "crypto":
+        if sym_upper in INDEX_SYMBOLS:
+            yf_sym    = INDEX_SYMBOLS[sym_upper]
+            is_indian = yf_sym in ('^NSEI', '^BSESN', '^NSEBANK', '^CNXIT')
+        elif sym_upper in INDIAN_STOCKS:
+            yf_sym    = f"{sym_upper}.NS"
+            is_indian = True
+
+    try:
+        while True:
+            try:
+                if type == "crypto":
+                    snapshot = await asyncio.get_event_loop().run_in_executor(
+                        None, get_quick_crypto_snapshot, sym_upper
+                    )
+                else:
+                    snapshot = await asyncio.get_event_loop().run_in_executor(
+                        None, get_quick_stock_snapshot,
+                        sym_upper, is_indian, yf_sym
+                    )
+
+                await websocket.send_json(snapshot)
+
+            except Exception as fetch_err:
+                # Send error frame — don't disconnect
+                await websocket.send_json({
+                    "symbol": sym_upper,
+                    "error":  str(fetch_err),
+                    "timestamp": __import__('datetime').datetime.utcnow().isoformat() + "Z"
+                })
+
+            # Wait 5 s before next tick (yield to event loop)
+            await asyncio.sleep(5)
+
+    except WebSocketDisconnect:
+        print(f"[WS] Client disconnected from /ws/live/{symbol}")
+    except Exception as e:
+        print(f"[WS] Error on /ws/live/{symbol}: {e}")
+        try:
+            await websocket.close(code=1011)
+        except Exception:
+            pass

@@ -176,60 +176,76 @@ def search_symbols(query: str, limit: int = 8):
     return results[:limit]
 
 def get_real_headlines(ticker, is_indian=False):
-    """Scrapes Google News RSS for the latest headlines."""
+    """Scrapes Google News RSS for the latest headlines with source URLs."""
     try:
-        # Get company name if available
         company_name = COMPANY_NAMES.get(ticker.upper(), ticker)
-        
-        # Build search query
+
         if is_indian:
             search_term = f"{company_name} {ticker} stock"
-            url = f"https://news.google.com/rss/search?q={search_term}&hl=en-IN&gl=IN&ceid=IN:en"
+            rss_url = f"https://news.google.com/rss/search?q={search_term}&hl=en-IN&gl=IN&ceid=IN:en"
         else:
             search_term = f"{ticker} stock"
-            url = f"https://news.google.com/rss/search?q={search_term}&hl=en-US&gl=US&ceid=US:en"
-        
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        }
-        response = requests.get(url, headers=headers, timeout=10)
-        
-        # Parse RSS using html.parser (more reliable)
+            rss_url = f"https://news.google.com/rss/search?q={search_term}&hl=en-US&gl=US&ceid=US:en"
+
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        response = requests.get(rss_url, headers=headers, timeout=10)
+
         soup = BeautifulSoup(response.content, 'html.parser')
-        
-        # Find all title tags within item tags
         headlines = []
         items = soup.find_all('item')
-        
+
         for item in items[:8]:
             title_tag = item.find('title')
-            if title_tag:
-                title = title_tag.get_text()
-                # Clean up - remove source suffix like " - Economic Times"
-                if ' - ' in title:
-                    title = title.rsplit(' - ', 1)[0]
-                if title and len(title) > 10:
-                    headlines.append(title.strip())
-        
+            if not title_tag:
+                continue
+            title = title_tag.get_text()
+            if ' - ' in title:
+                title = title.rsplit(' - ', 1)[0]
+            title = title.strip()
+            if not title or len(title) <= 10:
+                continue
+
+            # Google News RSS stores the link as text between <link>...</link>
+            # BeautifulSoup parses it as a NavigableString sibling, not an element
+            link_tag = item.find('link')
+            article_url = None
+            if link_tag:
+                # Try .next_sibling which holds the raw URL text
+                sib = link_tag.next_sibling
+                if sib and str(sib).strip().startswith('http'):
+                    article_url = str(sib).strip()
+                else:
+                    article_url = link_tag.get_text(strip=True)
+
+            if not article_url or not article_url.startswith('http'):
+                article_url = f"https://www.google.com/search?q={title.replace(' ', '+')}+{ticker}"
+
+            headlines.append({"title": title, "url": article_url})
+
         if headlines:
             return headlines
-        
-        # Fallback: Try regex parsing if BeautifulSoup fails
-        title_pattern = r'<title>([^<]+)</title>'
-        matches = re.findall(title_pattern, response.text)
-        
-        for match in matches[1:9]:  # Skip first (feed title)
+
+        # Fallback regex parsing
+        title_matches = re.findall(r'<title>([^<]+)</title>', response.text)
+        link_matches  = re.findall(r'<link>([^<]+)</link>',   response.text)
+
+        for i, match in enumerate(title_matches[1:9]):
             title = match.strip()
             if ' - ' in title:
                 title = title.rsplit(' - ', 1)[0]
             if title and len(title) > 10:
-                headlines.append(title)
-        
-        return headlines if headlines else [f"Market updates for {ticker}"]
-        
+                link = link_matches[i] if i < len(link_matches) else f"https://www.google.com/search?q={ticker}+stock+news"
+                headlines.append({"title": title, "url": link})
+
+        fallback_url = f"https://www.google.com/search?q={ticker}+stock+news"
+        return headlines if headlines else [{"title": f"Market updates for {ticker}", "url": fallback_url}]
+
     except Exception as e:
         print(f"News fetch error: {e}")
-        return [f"Market updates for {ticker}", f"Analysis for {ticker} stock"]
+        return [
+            {"title": f"Market updates for {ticker}", "url": f"https://www.google.com/search?q={ticker}+stock+news"},
+            {"title": f"Analysis for {ticker} stock", "url": f"https://finance.yahoo.com/quote/{ticker}"},
+        ]
 
 def get_market_data(symbol, asset_type="stock"):
     """Fetches Price History + Real News."""

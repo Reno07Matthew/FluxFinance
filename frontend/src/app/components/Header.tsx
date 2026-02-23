@@ -10,7 +10,7 @@ interface HeaderProps {
 }
 
 export const Header = ({ currentPage, onNavigate, onAnalyze }: HeaderProps) => {
-  const navItems = ['Home', 'Dashboard', 'Markets', 'Sentiment', 'Technical', 'Risk', 'Portfolio'];
+  const navItems = ['Home', 'Analysis', 'Markets', 'Portfolio'];
   const { symbol, setSymbol, assetType, setAssetType, loading } = useMarket();
   const [searchValue, setSearchValue] = useState('');
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
@@ -18,7 +18,7 @@ export const Header = ({ currentPage, onNavigate, onAnalyze }: HeaderProps) => {
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Debounced search
   useEffect(() => {
@@ -63,6 +63,7 @@ export const Header = ({ currentPage, onNavigate, onAnalyze }: HeaderProps) => {
     setSearchValue('');
     setSuggestions([]);
     setShowDropdown(false);
+    onNavigate('Analysis');
     if (onAnalyze) setTimeout(() => onAnalyze(), 50);
   };
 
@@ -72,6 +73,7 @@ export const Header = ({ currentPage, onNavigate, onAnalyze }: HeaderProps) => {
         setSymbol(searchValue.toUpperCase());
         setSearchValue('');
         setShowDropdown(false);
+        onNavigate('Analysis');
         if (onAnalyze) onAnalyze();
       }
       return;
@@ -91,6 +93,7 @@ export const Header = ({ currentPage, onNavigate, onAnalyze }: HeaderProps) => {
         setSymbol(searchValue.toUpperCase());
         setSearchValue('');
         setShowDropdown(false);
+        onNavigate('Analysis');
         if (onAnalyze) onAnalyze();
       }
     } else if (e.key === 'Escape') {
@@ -162,7 +165,7 @@ export const Header = ({ currentPage, onNavigate, onAnalyze }: HeaderProps) => {
 
             {/* Dropdown Suggestions */}
             {showDropdown && suggestions.length > 0 && (
-              <div className="absolute top-full left-0 mt-1 w-80 max-h-[320px] overflow-y-auto rounded-lg border border-slate-700 bg-slate-900/95 backdrop-blur-xl shadow-2xl z-50">
+              <div className="absolute top-full left-0 mt-1 w-80 max-h-[320px] overflow-y-auto rounded-lg border border-slate-700 bg-slate-900/95 backdrop-blur-xl shadow-2xl z-[200]">
                 <div className="px-3 py-2 border-b border-slate-800">
                   <span className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
                     {suggestions.length} result{suggestions.length !== 1 ? 's' : ''} found

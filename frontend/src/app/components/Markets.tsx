@@ -6,9 +6,10 @@ import { useMarket } from '@/context/MarketContext';
 
 interface MarketsProps {
   onNavigate?: (page: string) => void;
+  onAnalyze?: () => void;
 }
 
-export const Markets = ({ onNavigate }: MarketsProps) => {
+export const Markets = ({ onNavigate, onAnalyze }: MarketsProps) => {
   const [category, setCategory] = useState<'stock' | 'crypto'>('stock');
   const [assets, setAssets] = useState<MarketAsset[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,14 +33,17 @@ export const Markets = ({ onNavigate }: MarketsProps) => {
   const handleAssetClick = (asset: MarketAsset) => {
     setSymbol(asset.symbol);
     setAssetType(asset.type === 'crypto' ? 'crypto' : 'stock');
-    if (onNavigate) onNavigate('Dashboard');
+    if (onNavigate) onNavigate('Analysis');
+    // small delay lets React commit the symbol state before fetch fires
+    if (onAnalyze) setTimeout(() => onAnalyze(), 50);
   };
 
-  // Separate indices, gainers and losers — limit to top 5
+  // Separate indices, gainers and losers
   const indices = assets.filter(a => a.type === 'index');
   const nonIndex = assets.filter(a => a.type !== 'index');
-  const gainers = [...nonIndex].filter(a => a.change > 0).sort((a, b) => b.change - a.change).slice(0, 5);
-  const losers = [...nonIndex].filter(a => a.change < 0).sort((a, b) => a.change - b.change).slice(0, 5);
+  const gainers = [...nonIndex].filter(a => a.change > 0).sort((a, b) => b.change - a.change);
+  const losers = [...nonIndex].filter(a => a.change < 0).sort((a, b) => a.change - b.change);
+  const allStocks = [...nonIndex].sort((a, b) => a.symbol.localeCompare(b.symbol));
 
   const formatPrice = (price: number, currency: string) => {
     const sym = currency === 'INR' ? '₹' : '$';
@@ -57,8 +61,8 @@ export const Markets = ({ onNavigate }: MarketsProps) => {
       <td className="px-4 py-3.5">
         <div className="flex items-center gap-3">
           <div className={`flex h-9 w-9 items-center justify-center rounded-lg text-xs font-bold ${asset.change > 0 ? 'bg-emerald-500/10 text-emerald-400' :
-              asset.change < 0 ? 'bg-rose-500/10 text-rose-400' :
-                'bg-slate-700 text-slate-300'
+            asset.change < 0 ? 'bg-rose-500/10 text-rose-400' :
+              'bg-slate-700 text-slate-300'
             }`}>
             {asset.type === 'crypto' ? '₿' : asset.symbol.slice(0, 2)}
           </div>
@@ -80,8 +84,8 @@ export const Markets = ({ onNavigate }: MarketsProps) => {
       </td>
       <td className="px-4 py-3.5">
         <span className={`text-[10px] font-medium px-2 py-1 rounded-full ${asset.exchange === 'NSE' || asset.exchange === 'BSE' ? 'bg-emerald-500/10 text-emerald-400' :
-            asset.exchange === 'Binance' ? 'bg-amber-500/10 text-amber-400' :
-              'bg-slate-700 text-slate-400'
+          asset.exchange === 'Binance' ? 'bg-amber-500/10 text-amber-400' :
+            'bg-slate-700 text-slate-400'
           }`}>
           {asset.exchange}
         </span>
@@ -125,8 +129,8 @@ export const Markets = ({ onNavigate }: MarketsProps) => {
             <button
               onClick={() => setCategory('stock')}
               className={`flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition-all ${category === 'stock'
-                  ? 'bg-cyan-500/15 text-cyan-400 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-cyan-500/15 text-cyan-400 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
                 }`}
             >
               <BarChart3 className="h-4 w-4" />
@@ -135,8 +139,8 @@ export const Markets = ({ onNavigate }: MarketsProps) => {
             <button
               onClick={() => setCategory('crypto')}
               className={`flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition-all ${category === 'crypto'
-                  ? 'bg-amber-500/15 text-amber-400 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-amber-500/15 text-amber-400 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
                 }`}
             >
               <Zap className="h-4 w-4" />
@@ -211,7 +215,7 @@ export const Markets = ({ onNavigate }: MarketsProps) => {
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-emerald-400 mb-3 flex items-center gap-2">
                 <TrendingUp className="h-4 w-4" />
-                Top 5 Gainers
+                Top Gainers ({gainers.length})
               </h3>
               <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
                 <table className="w-full text-left text-sm">
@@ -231,13 +235,32 @@ export const Markets = ({ onNavigate }: MarketsProps) => {
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-rose-400 mb-3 flex items-center gap-2">
                 <TrendingDown className="h-4 w-4" />
-                Top 5 Losers
+                Top Losers ({losers.length})
               </h3>
               <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
                 <table className="w-full text-left text-sm">
                   <TableHeader />
                   <tbody className="divide-y divide-slate-800/50">
                     {losers.map((asset, i) => (
+                      <AssetRow key={asset.symbol} asset={asset} index={i} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          {/* All Stocks Table */}
+          {allStocks.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                All {category === 'crypto' ? 'Crypto' : 'Stocks'} ({allStocks.length})
+              </h3>
+              <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
+                <table className="w-full text-left text-sm">
+                  <TableHeader />
+                  <tbody className="divide-y divide-slate-800/50">
+                    {allStocks.map((asset, i) => (
                       <AssetRow key={asset.symbol} asset={asset} index={i} />
                     ))}
                   </tbody>
