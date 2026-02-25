@@ -1,10 +1,30 @@
+import os
 import yfinance as yf
 import ccxt
 import requests
 from bs4 import BeautifulSoup
 import re
+import pandas as pd
+from dotenv import load_dotenv
+
+load_dotenv()  # reads backend/.env
+ALPHA_VANTAGE_KEY = os.getenv("ALPHA_VANTAGE_KEY", "")
 
 exchange = ccxt.binance()
+
+
+def flatten_hist(hist: pd.DataFrame) -> pd.DataFrame:
+    """
+    Newer yfinance (>=0.2.50) returns a MultiIndex DataFrame whose columns look
+    like ('Close', 'RELIANCE.NS').  This helper flattens them back to plain
+    single-level column names ('Close', 'High', 'Low', 'Open', 'Volume') so
+    the rest of the code works with both old and new yfinance versions.
+    """
+    if isinstance(hist.columns, pd.MultiIndex):
+        # Keep only the first level (the field name)
+        hist = hist.copy()
+        hist.columns = hist.columns.get_level_values(0)
+    return hist
 
 # Index symbols mapping - these need special Yahoo Finance symbols
 INDEX_SYMBOLS = {
@@ -175,77 +195,154 @@ def search_symbols(query: str, limit: int = 8):
     
     return results[:limit]
 
-def get_real_headlines(ticker, is_indian=False):
-    """Scrapes Google News RSS for the latest headlines with source URLs."""
-    try:
-        company_name = COMPANY_NAMES.get(ticker.upper(), ticker)
+def _google_news_fallback(ticker: str, is_indian: bool) -> list:
+    """
+    Scrape Google News RSS for headlines + source URLs.
+    For Indian stocks: uses focused company-name + NSE queries for better relevance.
+    Tries 2 query strategies and deduplicates results.
+    """
+    import urllib.parse
 
-        if is_indian:
-            search_term = f"{company_name} {ticker} stock"
-            rss_url = f"https://news.google.com/rss/search?q={search_term}&hl=en-IN&gl=IN&ceid=IN:en"
-        else:
-            search_term = f"{ticker} stock"
-            rss_url = f"https://news.google.com/rss/search?q={search_term}&hl=en-US&gl=US&ceid=US:en"
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    company_name = COMPANY_NAMES.get(ticker.upper(), ticker)
 
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-        response = requests.get(rss_url, headers=headers, timeout=10)
-
-        soup = BeautifulSoup(response.content, 'html.parser')
-        headlines = []
-        items = soup.find_all('item')
-
-        for item in items[:8]:
-            title_tag = item.find('title')
-            if not title_tag:
-                continue
-            title = title_tag.get_text()
-            if ' - ' in title:
-                title = title.rsplit(' - ', 1)[0]
-            title = title.strip()
-            if not title or len(title) <= 10:
-                continue
-
-            # Google News RSS stores the link as text between <link>...</link>
-            # BeautifulSoup parses it as a NavigableString sibling, not an element
-            link_tag = item.find('link')
-            article_url = None
-            if link_tag:
-                # Try .next_sibling which holds the raw URL text
-                sib = link_tag.next_sibling
-                if sib and str(sib).strip().startswith('http'):
-                    article_url = str(sib).strip()
-                else:
-                    article_url = link_tag.get_text(strip=True)
-
-            if not article_url or not article_url.startswith('http'):
-                article_url = f"https://www.google.com/search?q={title.replace(' ', '+')}+{ticker}"
-
-            headlines.append({"title": title, "url": article_url})
-
-        if headlines:
-            return headlines
-
-        # Fallback regex parsing
-        title_matches = re.findall(r'<title>([^<]+)</title>', response.text)
-        link_matches  = re.findall(r'<link>([^<]+)</link>',   response.text)
-
-        for i, match in enumerate(title_matches[1:9]):
-            title = match.strip()
-            if ' - ' in title:
-                title = title.rsplit(' - ', 1)[0]
-            if title and len(title) > 10:
-                link = link_matches[i] if i < len(link_matches) else f"https://www.google.com/search?q={ticker}+stock+news"
-                headlines.append({"title": title, "url": link})
-
-        fallback_url = f"https://www.google.com/search?q={ticker}+stock+news"
-        return headlines if headlines else [{"title": f"Market updates for {ticker}", "url": fallback_url}]
-
-    except Exception as e:
-        print(f"News fetch error: {e}")
-        return [
-            {"title": f"Market updates for {ticker}", "url": f"https://www.google.com/search?q={ticker}+stock+news"},
-            {"title": f"Analysis for {ticker} stock", "url": f"https://finance.yahoo.com/quote/{ticker}"},
+    if is_indian:
+        # Two targeted queries for Indian stocks
+        queries = [
+            f"{company_name} NSE stock",           # e.g. "Reliance Industries NSE stock"
+            f"{ticker} share price India",          # e.g. "RELIANCE share price India"
         ]
+        locale = "&hl=en-IN&gl=IN&ceid=IN:en"
+    else:
+        queries = [f"{ticker} stock market"]
+        locale = "&hl=en-US&gl=US&ceid=US:en"
+
+    seen_titles = set()
+    headlines   = []
+
+    for query in queries:
+        if len(headlines) >= 8:
+            break
+        try:
+            q_enc  = urllib.parse.quote(query)
+            rss_url = f"https://news.google.com/rss/search?q={q_enc}{locale}"
+            response = requests.get(rss_url, headers=headers, timeout=10, verify=False)
+            soup = BeautifulSoup(response.content, 'html.parser')
+
+            for item in soup.find_all('item'):
+                if len(headlines) >= 8:
+                    break
+                title_tag = item.find('title')
+                if not title_tag:
+                    continue
+                title = title_tag.get_text()
+                # Strip source suffix: "Reliance Q3 profit — Economic Times" → keep title only
+                if ' - ' in title:
+                    title = title.rsplit(' - ', 1)[0]
+                elif ' — ' in title:
+                    title = title.rsplit(' — ', 1)[0]
+                title = title.strip()
+                if not title or len(title) <= 10:
+                    continue
+                # Deduplicate
+                key = title.lower()[:50]
+                if key in seen_titles:
+                    continue
+                seen_titles.add(key)
+
+                # Extract article URL from <link> sibling (Google News RSS quirk)
+                link_tag    = item.find('link')
+                article_url = None
+                if link_tag:
+                    sib = link_tag.next_sibling
+                    if sib and str(sib).strip().startswith('http'):
+                        article_url = str(sib).strip()
+                    else:
+                        article_url = link_tag.get_text(strip=True)
+
+                if not article_url or not article_url.startswith('http'):
+                    # Google search as last-resort link
+                    t_enc = urllib.parse.quote(f"{title} {ticker}")
+                    article_url = f"https://www.google.com/search?q={t_enc}"
+
+                headlines.append({"title": title, "url": article_url})
+
+        except Exception as e:
+            print(f"[GoogleNews] Query '{query}' failed: {e}")
+
+    return headlines
+
+
+
+def get_real_headlines(ticker: str, is_indian: bool = False) -> list:
+    """
+    Fetch news headlines for a ticker.
+    - PRIMARY: Alpha Vantage NEWS_SENTIMENT (structured data + pre-scored sentiment)
+    - FALLBACK: Google News RSS scraper (used for Indian stocks or AV rate-limit hit)
+    Each item: { title, url, av_sentiment_score? }
+    """
+    # ── Try Alpha Vantage first ──────────────────────────────────────────────
+    if ALPHA_VANTAGE_KEY:
+        try:
+            av_url = (
+                f"https://www.alphavantage.co/query"
+                f"?function=NEWS_SENTIMENT"
+                f"&tickers={ticker.upper()}"
+                f"&limit=10"
+                f"&sort=LATEST"
+                f"&apikey={ALPHA_VANTAGE_KEY}"
+            )
+            resp = requests.get(av_url, timeout=12, verify=False)
+            data = resp.json()
+
+            # Detect rate limit / error responses
+            if "Information" in data or "Note" in data:
+                print(f"[AV] Rate limit hit for {ticker}, falling back to Google News")
+            elif "feed" in data and data["feed"]:
+                headlines = []
+                for article in data["feed"][:8]:
+                    title   = article.get("title", "").strip()
+                    url     = article.get("url", "").strip()
+                    # AV provides per-ticker sentiment inside ticker_sentiment[]
+                    av_score = None
+                    for ts in article.get("ticker_sentiment", []):
+                        if ts.get("ticker", "").upper() == ticker.upper():
+                            try:
+                                av_score = float(ts["ticker_sentiment_score"])
+                            except (ValueError, KeyError):
+                                pass
+                            break
+                    # Fall back to overall article sentiment if ticker-specific not found
+                    if av_score is None:
+                        try:
+                            av_score = float(article.get("overall_sentiment_score", 0))
+                        except (ValueError, TypeError):
+                            av_score = 0.0
+
+                    if title and url:
+                        headlines.append({
+                            "title": title,
+                            "url":   url,
+                            "av_sentiment_score": round(av_score, 4),
+                        })
+
+                if headlines:
+                    print(f"[AV] {len(headlines)} articles fetched for {ticker}")
+                    return headlines
+        except Exception as e:
+            print(f"[AV] News fetch error for {ticker}: {e}")
+
+    # ── Fallback: Google News RSS ────────────────────────────────────────────
+    print(f"[News] Using Google News for {ticker}")
+    fallback = _google_news_fallback(ticker, is_indian)
+    if fallback:
+        return fallback
+
+    fallback_url = f"https://www.google.com/search?q={ticker}+stock+news"
+    return [
+        {"title": f"Market updates for {ticker}", "url": fallback_url},
+        {"title": f"Analysis for {ticker} stock", "url": f"https://finance.yahoo.com/quote/{ticker}"},
+    ]
 
 def get_market_data(symbol, asset_type="stock"):
     """Fetches Price History + Real News."""
@@ -281,20 +378,20 @@ def get_market_data(symbol, asset_type="stock"):
                 yf_symbol = symbol.upper()
             
             stock = yf.Ticker(yf_symbol)
-            hist = stock.history(period="1mo")
-            
+            hist = flatten_hist(stock.history(period="1mo"))
+
             if hist.empty:
                 # Try with .NS if direct symbol failed
                 if not is_indian and symbol_upper not in INDEX_SYMBOLS:
                     yf_symbol = f"{symbol.upper()}.NS"
                     stock = yf.Ticker(yf_symbol)
-                    hist = stock.history(period="1mo")
+                    hist = flatten_hist(stock.history(period="1mo"))
                     if not hist.empty:
                         is_indian = True
                         currency = "INR"
-            
+
             history = hist['Close'].tolist() if not hist.empty else []
-            current_price = round(history[-1], 2) if history else 0
+            current_price = round(float(history[-1]), 2) if history else 0
             display_symbol = symbol_upper
 
         # Fetch News
@@ -367,13 +464,13 @@ def get_batch_market_data(category="stock"):
                         yf_sym = sym_upper
                     
                     stock = yf.Ticker(yf_sym)
-                    hist = stock.history(period="5d")
-                    
+                    hist  = flatten_hist(stock.history(period="5d"))
+
                     if hist.empty or len(hist) < 2:
                         continue
-                    
-                    current = hist['Close'].iloc[-1]
-                    previous = hist['Close'].iloc[-2]
+
+                    current    = float(hist['Close'].iloc[-1])
+                    previous   = float(hist['Close'].iloc[-2])
                     change_pct = ((current - previous) / previous) * 100
                     
                     is_indian = sym_upper in INDIAN_STOCKS or sym_upper in INDEX_SYMBOLS and INDEX_SYMBOLS.get(sym_upper, '') in ('^NSEI', '^BSESN', '^NSEBANK', '^CNXIT')

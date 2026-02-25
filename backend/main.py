@@ -70,8 +70,9 @@ def portfolio_prices(symbols: str = ""):
                 else:
                     yf_sym = sym
 
+                from data_provider import flatten_hist
                 stock = yf.Ticker(yf_sym)
-                hist  = stock.history(period="5d")
+                hist  = flatten_hist(stock.history(period="5d"))
                 if not hist.empty:
                     current = round(float(hist['Close'].iloc[-1]), 2)
                     prev    = round(float(hist['Close'].iloc[-2]), 2) if len(hist) >= 2 else current
@@ -107,11 +108,28 @@ def analyze(symbol: str, type: str = "stock"):
         currency  = data.get('currency', 'USD')
         is_indian = data.get('is_indian', False)
 
-        # ── 2. AI Sentiment ── (FinBERT needs plain text strings)
-        headline_titles = [h['title'] if isinstance(h, dict) else h for h in headlines]
-        sentiment = analyze_sentiment(headline_titles)
-        if not sentiment:
-            sentiment = {"score": 0, "label": "Neutral"}
+        # ── 2. AI Sentiment ──────────────────────────────────────────────────
+        # If Alpha Vantage already scored the headlines, use those directly.
+        # AV scores are finance-specific and save running FinBERT locally.
+        av_scores = [
+            h['av_sentiment_score']
+            for h in headlines
+            if isinstance(h, dict) and 'av_sentiment_score' in h
+        ]
+
+        if av_scores:
+            # AV score range: -1.0 (bearish) to +1.0 (bullish)
+            raw = sum(av_scores) / len(av_scores)
+            label = "Positive" if raw > 0.15 else "Negative" if raw < -0.15 else "Neutral"
+            sentiment = {"score": round(raw, 4), "label": label}
+            print(f"[Sentiment] Using AV scores for {symbol}: {sentiment}")
+        else:
+            # Fallback: run FinBERT on headline titles
+            headline_titles = [h['title'] if isinstance(h, dict) else h for h in headlines]
+            sentiment = analyze_sentiment(headline_titles)
+            if not sentiment:
+                sentiment = {"score": 0, "label": "Neutral"}
+            print(f"[Sentiment] Using FinBERT for {symbol}: {sentiment}")
 
         ai_score = float(sentiment.get('score', 0))
 

@@ -57,14 +57,22 @@ def _supertrend_dir(df: pd.DataFrame, length: int = 7, mult: float = 3.0) -> int
         return 0
 
 
+def _flatten(hist: pd.DataFrame) -> pd.DataFrame:
+    """Strip yfinance MultiIndex columns back to single-level names."""
+    if isinstance(hist.columns, pd.MultiIndex):
+        hist = hist.copy()
+        hist.columns = hist.columns.get_level_values(0)
+    return hist
+
+
 def get_quick_stock_snapshot(symbol: str, is_indian: bool, yf_symbol: str) -> dict:
     """
-    Fetches current price + 5-day history for RSI/SuperTrend.
+    Fetches current price + 30-day history for RSI/SuperTrend.
     Returns a lightweight snapshot dict.
     """
     try:
         ticker = yf.Ticker(yf_symbol)
-        hist   = ticker.history(period="30d")
+        hist   = _flatten(ticker.history(period="30d"))
 
         if hist.empty:
             return {"error": f"No data for {symbol}"}
