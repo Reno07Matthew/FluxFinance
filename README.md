@@ -57,57 +57,9 @@ The **Flux Verdict Consensus Engine** applies 5 primary rules combining these la
 
 ---
 
-## 🚀 Quick Start
-
-### Prerequisites
-- Python 3.10+
-- Node.js 18+
-
-### 1. Backend Setup
-
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate    # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-
-# Start the API server
-uvicorn main:app --reload --port 8000
-```
-*Note: The first run will automatically download the FinBERT model to your local machine.*
-
-### 2. Frontend Setup
-
-```bash
-cd frontend
-npm install
-
-# Start the dev server
-npm run dev
-```
-
-### 3. Access the Platform
-- **Frontend Dashboard:** [http://localhost:3000](http://localhost:3000) (or via the port specified by Vite, usually `5173`)
-- **Backend API Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
-
----
-
-## 📡 Core API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/` | `GET` | Health check |
-| `/analyze?symbol=RELIANCE&type=stock` | `GET` | Full comprehensive analysis with sentiment and technicals |
-| `ws://localhost:8000/ws` | `WS` | Real-time WebSocket stream for asset-price updates |
-
----
-
-## 📜 License
+## License
 
 Distributed under the MIT License. Free for personal and commercial use.
 
 ---
 
-<div align="center">
-  <i>Built with ❤️ using AI-powered analysis.</i>
-</div>
