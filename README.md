@@ -1,45 +1,59 @@
-# 🔷 Flux Finance
-
-**AI-Powered Sentiment & Technical Analysis Platform for Financial Markets**
-
-Flux Finance combines AI-based market sentiment analysis (FinBERT, NLP) with technical indicators (RSI) to provide intelligent investment insights.
-
----
-
-## ✨ Features
-
-- **AI Sentiment Analysis** - FinBERT model analyzes live news headlines
-- **Technical Indicators** - RSI calculation with overbought/oversold signals
-- **Flux Verdict** - Compares psychology (sentiment) vs reality (technicals)
-- **Live News Feed** - Real-time headlines from Google News
-- **Multi-Asset Support** - Indian stocks (NSE) and Cryptocurrencies
-- **Modern UI** - Dark theme React dashboard with TailwindCSS
+<div align="center">
+  <h1>🔷 Flux Finance</h1>
+  <p><b>AI-Powered Sentiment & Technical Analysis Platform for Financial Markets</b></p>
+  
+  <p>
+    <img src="https://img.shields.io/badge/Python-3.10+-blue.svg" alt="Python Version" />
+    <img src="https://img.shields.io/badge/Node.js-18+-green.svg" alt="Node Version" />
+    <img src="https://img.shields.io/badge/React-18-61dafb.svg" alt="React" />
+    <img src="https://img.shields.io/badge/FastAPI-009688.svg" alt="FastAPI" />
+  </p>
+</div>
 
 ---
 
-## 🏗️ Project Structure
+**Flux Finance** is an AI-powered real-time stock and crypto analysis platform designed to provide retail investors with actionable intelligence. By combining mathematical technical indicators with AI-driven sentiment analysis, Flux Finance gives you the complete picture—**psychology vs. reality.**
 
-```
-FluxFinance/
-├── backend/                 # Python FastAPI
-│   ├── main.py              # API endpoints + CORS
-│   ├── ai_engine.py         # FinBERT sentiment analysis
-│   ├── data_provider.py     # Stock/Crypto data (yfinance, ccxt)
-│   ├── technical_engine.py  # RSI calculation
-│   ├── flux_engine.py       # Verdict logic
-│   └── requirements.txt     # Python dependencies
-│
-├── frontend/                # React + Vite + TailwindCSS
-│   ├── src/
-│   │   ├── app/App.tsx      # Main app component
-│   │   ├── context/         # React state management
-│   │   ├── services/api.ts  # Backend API integration
-│   │   └── components/      # UI components
-│   ├── package.json
-│   └── vite.config.ts
-│
-└── venv/                    # Python virtual environment
-```
+## ✨ Key Features
+
+- **🧠 AI Sentiment Engine:** Utilizes the FinBERT NLP model to analyze live news headlines and gauge market psychology.
+- **📊 7-Layer Technical Engine:** Native calculations for RSI, SMA-200, EMA-50, VWAP, OBV, SuperTrend, and Pivot Points.
+- **⚖️ Flux Verdict Consensus:** A proprietary scoring system (0-100) that synthesizes sentiment and technicals into a clear, actionable verdict (e.g., 🚨 HIGH RISK, ✅ STRONG BUY).
+- **⚡ Real-Time Data Streams:** Native WebSocket integration for live price and technical updates.
+- **🌍 Multi-Asset Support:** Full support for Indian equities (NSE/BSE) via `yfinance` and global cryptocurrencies via `ccxt`.
+- **🎨 Modern UI/UX:** Responsive, dark-themed dashboard built with React, Vite, TailwindCSS, and Framer Motion.
+
+---
+
+## 🏗️ System Architecture
+
+Flux Finance is built on a modern, decoupled architecture:
+
+### Frontend
+- **Framework:** React 18 (Vite)
+- **Styling:** TailwindCSS
+- **Animations:** Framer Motion
+- **Charting:** Recharts
+- **State:** React Context API (`MarketContext`)
+
+### Backend
+- **Framework:** FastAPI (Python)
+- **Data Processing:** Pandas, NumPy
+- **AI/NLP:** HuggingFace Transformers (`ProsusAI/finbert`)
+- **Data Sources:** `yfinance` (Stocks), `ccxt` (Crypto), Google News RSS (Sentiment)
+
+---
+
+## 📈 The Flux Verdict Engine
+
+To provide comprehensive insights, Flux Finance organizes asset analysis into "Defense Layers":
+
+1. **Psychology (Momentum):** RSI
+2. **Macro Trend (Direction):** SMA-200, EMA-50
+3. **Institutional Truth (Volume & Flow):** VWAP, OBV, SuperTrend
+4. **Risk Management:** Pivot Points (R1 / S1)
+
+The **Flux Verdict Consensus Engine** applies 5 primary rules combining these layers and FinBERT's sentiment score to generate a final rating. For example, high hype (RSI > 70 + Positive Sentiment) in a bearish macro trend will yield a strong warning.
 
 ---
 
@@ -48,86 +62,52 @@ FluxFinance/
 ### Prerequisites
 - Python 3.10+
 - Node.js 18+
-- npm
 
-### Backend Setup
+### 1. Backend Setup
+
 ```bash
 cd backend
-python -m venv ../venv
-source ../venv/bin/activate    # Linux/Mac
+python -m venv venv
+source venv/bin/activate    # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
+
+# Start the API server
 uvicorn main:app --reload --port 8000
 ```
+*Note: The first run will automatically download the FinBERT model to your local machine.*
 
-### Frontend Setup
+### 2. Frontend Setup
+
 ```bash
 cd frontend
 npm install
+
+# Start the dev server
 npm run dev
 ```
 
-### Access
-- **Frontend:** http://localhost:3000
-- **Backend API:** http://localhost:8000
+### 3. Access the Platform
+- **Frontend Dashboard:** [http://localhost:3000](http://localhost:3000) (or via the port specified by Vite, usually `5173`)
+- **Backend API Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
 
-## � API Endpoints
+## 📡 Core API Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/` | GET | Health check |
-| `/analyze?symbol=RELIANCE&type=stock` | GET | Full analysis |
-
-### Sample Response
-```json
-{
-  "symbol": "RELIANCE",
-  "price": 1456.8,
-  "currency": "INR",
-  "sentiment": { "score": 0.65, "label": "Positive" },
-  "technical": { "rsi": 45.2, "signal": "Neutral" },
-  "verdict": {
-    "status": "✅ HEALTHY UPTREND",
-    "flux_score": 30,
-    "description": "Positive sentiment with stable technicals"
-  },
-  "headlines": ["...", "..."],
-  "history": [1400, 1420, ...]
-}
-```
+| `/` | `GET` | Health check |
+| `/analyze?symbol=RELIANCE&type=stock` | `GET` | Full comprehensive analysis with sentiment and technicals |
+| `ws://localhost:8000/ws` | `WS` | Real-time WebSocket stream for asset-price updates |
 
 ---
 
-## 🎨 Tech Stack
+## 📜 License
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | React 18, Vite, TailwindCSS, Recharts |
-| Backend | FastAPI, Python 3.10 |
-| AI/ML | HuggingFace Transformers, FinBERT |
-| Data | yfinance, ccxt, Google News RSS |
+Distributed under the MIT License. Free for personal and commercial use.
 
 ---
 
-## 📈 Flux Verdict Logic
-
-| Condition | Verdict | Flux Score |
-|-----------|---------|------------|
-| High Sentiment + High RSI | � HYPE WARNING | 90 |
-| Low Sentiment + Low RSI | 💎 VALUE OPPORTUNITY | 10 |
-| Positive Sentiment + Neutral RSI | ✅ HEALTHY UPTREND | 30 |
-| Negative Sentiment + Low RSI | � BEARISH TREND | 80 |
-| Mixed Signals | ⚖️ MARKET NEUTRAL | 50 |
-
----
-
-## � License
-
-MIT License - Free for personal and commercial use.
-
----
-
-## 👨‍💻 Author
-
-Built with ❤️ using AI-powered analysis.
+<div align="center">
+  <i>Built with ❤️ using AI-powered analysis.</i>
+</div>
