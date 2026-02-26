@@ -14,11 +14,11 @@
 
 **Flux Finance** is an AI-powered real-time stock and crypto analysis platform designed to provide retail investors with actionable intelligence. By combining mathematical technical indicators with AI-driven sentiment analysis, Flux Finance gives you the complete picture—**psychology vs. reality.**
 
-## ✨ Key Features
+##  Key Features
 
 - ** AI Sentiment Engine:** Utilizes the FinBERT NLP model to analyze live news headlines and gauge market psychology.
 - ** 7-Layer Technical Engine:** Native calculations for RSI, SMA-200, EMA-50, VWAP, OBV, SuperTrend, and Pivot Points.
-- ** Flux Verdict Consensus:** A proprietary scoring system (0-100) that synthesizes sentiment and technicals into a clear, actionable verdict (e.g., 🚨 HIGH RISK, ✅ STRONG BUY).
+- ** Flux Verdict Consensus:** A proprietary scoring system (0-100) that synthesizes sentiment and technicals into a clear, actionable verdict (e.g.,  HIGH RISK,  STRONG BUY).
 - ** Real-Time Data Streams:** Native WebSocket integration for live price and technical updates.
 - ** Multi-Asset Support:** Full support for Indian equities (NSE/BSE) via `yfinance` and global cryptocurrencies via `ccxt`.
 - ** Modern UI/UX:** Responsive, dark-themed dashboard built with React, Vite, TailwindCSS, and Framer Motion.
