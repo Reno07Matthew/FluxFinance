@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🔷 Flux Finance</h1>
+  <h1>Flux Finance</h1>
   <p><b>AI-Powered Sentiment & Technical Analysis Platform for Financial Markets</b></p>
   
   <p>
@@ -16,16 +16,16 @@
 
 ## ✨ Key Features
 
-- **🧠 AI Sentiment Engine:** Utilizes the FinBERT NLP model to analyze live news headlines and gauge market psychology.
-- **📊 7-Layer Technical Engine:** Native calculations for RSI, SMA-200, EMA-50, VWAP, OBV, SuperTrend, and Pivot Points.
-- **⚖️ Flux Verdict Consensus:** A proprietary scoring system (0-100) that synthesizes sentiment and technicals into a clear, actionable verdict (e.g., 🚨 HIGH RISK, ✅ STRONG BUY).
-- **⚡ Real-Time Data Streams:** Native WebSocket integration for live price and technical updates.
-- **🌍 Multi-Asset Support:** Full support for Indian equities (NSE/BSE) via `yfinance` and global cryptocurrencies via `ccxt`.
-- **🎨 Modern UI/UX:** Responsive, dark-themed dashboard built with React, Vite, TailwindCSS, and Framer Motion.
+- ** AI Sentiment Engine:** Utilizes the FinBERT NLP model to analyze live news headlines and gauge market psychology.
+- ** 7-Layer Technical Engine:** Native calculations for RSI, SMA-200, EMA-50, VWAP, OBV, SuperTrend, and Pivot Points.
+- ** Flux Verdict Consensus:** A proprietary scoring system (0-100) that synthesizes sentiment and technicals into a clear, actionable verdict (e.g., 🚨 HIGH RISK, ✅ STRONG BUY).
+- ** Real-Time Data Streams:** Native WebSocket integration for live price and technical updates.
+- ** Multi-Asset Support:** Full support for Indian equities (NSE/BSE) via `yfinance` and global cryptocurrencies via `ccxt`.
+- ** Modern UI/UX:** Responsive, dark-themed dashboard built with React, Vite, TailwindCSS, and Framer Motion.
 
 ---
 
-## 🏗️ System Architecture
+##  System Architecture
 
 Flux Finance is built on a modern, decoupled architecture:
 
@@ -44,7 +44,7 @@ Flux Finance is built on a modern, decoupled architecture:
 
 ---
 
-## 📈 The Flux Verdict Engine
+##  The Flux Verdict Engine
 
 To provide comprehensive insights, Flux Finance organizes asset analysis into "Defense Layers":
 
