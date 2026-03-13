@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Bell, User, Menu, Activity, RefreshCw } from 'lucide-react';
+import { Search, Bell, User, Menu, Activity, RefreshCw, LogOut, ChevronDown } from 'lucide-react';
 import { useMarket } from '@/context/MarketContext';
+import { useAuth } from '@/context/AuthContext';
 import { searchAssets, SearchResult } from '@/services/api';
 
 interface HeaderProps {
@@ -12,12 +13,15 @@ interface HeaderProps {
 export const Header = ({ currentPage, onNavigate, onAnalyze }: HeaderProps) => {
   const navItems = ['Home', 'Analysis', 'Markets', 'Portfolio'];
   const { symbol, setSymbol, assetType, setAssetType, loading } = useMarket();
+  const { user, signOut } = useAuth();
   const [searchValue, setSearchValue] = useState('');
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Debounced search
@@ -46,11 +50,14 @@ export const Header = ({ currentPage, onNavigate, onAnalyze }: HeaderProps) => {
     };
   }, [searchValue]);
 
-  // Close dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setShowDropdown(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -217,9 +224,44 @@ export const Header = ({ currentPage, onNavigate, onAnalyze }: HeaderProps) => {
             <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-cyan-500"></span>
           </button>
 
-          <button className="size-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700">
-            <User className="h-4 w-4 text-slate-300" />
-          </button>
+          {/* User Menu */}
+          {user ? (
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center gap-2 h-9 px-2 rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                <div className="size-7 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
+                  {user.email?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showUserMenu && (
+                <div className="absolute right-0 top-full mt-2 w-64 rounded-lg border border-slate-700 bg-slate-900/95 backdrop-blur-xl shadow-2xl z-[200] py-2">
+                  <div className="px-4 py-3 border-b border-slate-800">
+                    <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Signed in as</p>
+                    <p className="text-sm text-slate-200 font-medium truncate">{user.email}</p>
+                  </div>
+                  <button
+                    onClick={() => { signOut(); setShowUserMenu(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={() => onNavigate('Portfolio')}
+              className="flex items-center gap-2 h-9 px-4 rounded-md border border-slate-700 hover:border-cyan-500/50 hover:bg-cyan-500/10 text-slate-300 hover:text-cyan-400 text-sm font-medium transition-all"
+            >
+              <User className="h-4 w-4" />
+              Sign In
+            </button>
+          )}
         </div>
       </div>
     </header>

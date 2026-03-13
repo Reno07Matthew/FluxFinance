@@ -9,3 +9,7 @@ torch
 pandas
 streamlit
 plotly
+PyJWT
+cryptography
+python-dotenv
+supabase

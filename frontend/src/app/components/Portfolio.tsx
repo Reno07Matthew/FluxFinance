@@ -1,11 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PortfolioRisk } from '@/app/components/PortfolioRisk';
-import { Wallet, ArrowUpRight, ArrowDownRight, Zap, Shield, X, Plus, Search, Trash2, RefreshCw } from 'lucide-react';
+import { Wallet, ArrowUpRight, ArrowDownRight, Zap, Shield, X, Plus, Search, Trash2, RefreshCw, Database } from 'lucide-react';
 import { searchAssets, SearchResult, getPortfolioPrices, PriceData } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+import {
+    ensureUserProfile,
+    getOrCreateDefaultPortfolio,
+    getHoldings,
+    addHolding as dbAddHolding,
+    removeHolding as dbRemoveHolding,
+    DbHolding,
+} from '@/services/supabaseDb';
 
-// Types
+// Types — local UI representation
 interface Holding {
+    holdingId?: string;  // Supabase holding_id (undefined for legacy/local)
     symbol: string;
     name: string;
     quantity: number;
@@ -24,15 +34,6 @@ interface LiveHolding extends Holding {
     verdictIcon: string;
 }
 
-// Default sample holdings
-const DEFAULT_HOLDINGS: Holding[] = [
-    { symbol: 'RELIANCE', name: 'Reliance Industries', quantity: 50, avgPrice: 2400, type: 'stock' },
-    { symbol: 'TCS', name: 'Tata Consultancy Services', quantity: 20, avgPrice: 3500, type: 'stock' },
-    { symbol: 'INFY', name: 'Infosys', quantity: 40, avgPrice: 1450, type: 'stock' },
-];
-
-const STORAGE_KEY = 'flux_portfolio_holdings';
-
 const getVerdictStyle = (verdict: string) => {
     switch (verdict) {
         case 'HYPE BUBBLE': return 'bg-red-500/15 text-red-400 border border-red-500/40';
@@ -48,23 +49,57 @@ const getVerdict = (plPercent: number, change: number): { verdict: string; icon:
     return { verdict: 'HOLD', icon: '⏸️' };
 };
 
+/** Maps a Supabase DbHolding to the local Holding interface */
+const mapDbHolding = (h: DbHolding): Holding => ({
+    holdingId: h.holding_id,
+    symbol: h.asset_symbol,
+    name: h.asset_symbol, // Name will be enriched from price data
+    quantity: h.quantity,
+    avgPrice: h.avg_buy_price,
+    type: h.asset_type,
+});
+
 export const Portfolio = () => {
-    const [holdings, setHoldings] = useState<Holding[]>(() => {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        return saved ? JSON.parse(saved) : DEFAULT_HOLDINGS;
-    });
+    const { user } = useAuth();
+    const [holdings, setHoldings] = useState<Holding[]>([]);
+    const [portfolioId, setPortfolioId] = useState<string | null>(null);
     const [livePrices, setLivePrices] = useState<Record<string, PriceData>>({});
     const [loading, setLoading] = useState(false);
+    const [dbLoading, setDbLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showRebalanceModal, setShowRebalanceModal] = useState(false);
     const [hoveredRow, setHoveredRow] = useState<string | null>(null);
 
-    // Save to localStorage whenever holdings change
+    // ── Load portfolio & holdings from Supabase on mount ──
     useEffect(() => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(holdings));
-    }, [holdings]);
+        if (!user) return;
+        let cancelled = false;
 
-    // Fetch live prices
+        const loadFromSupabase = async () => {
+            setDbLoading(true);
+            try {
+                // Ensure user profile exists before creating portfolio (avoids FK error)
+                await ensureUserProfile(user.id, user.email || '', user.user_metadata?.full_name);
+
+                const pId = await getOrCreateDefaultPortfolio(user.id);
+                if (cancelled || !pId) { setDbLoading(false); return; }
+                setPortfolioId(pId);
+
+                const dbHoldings = await getHoldings(pId);
+                if (!cancelled) {
+                    setHoldings(dbHoldings.map(mapDbHolding));
+                }
+            } catch (err) {
+                console.error('Failed to load portfolio from Supabase:', err);
+            }
+            if (!cancelled) setDbLoading(false);
+        };
+
+        loadFromSupabase();
+        return () => { cancelled = true; };
+    }, [user]);
+
+    // ── Fetch live prices ──
     const fetchPrices = async () => {
         if (holdings.length === 0) return;
         setLoading(true);
@@ -79,10 +114,10 @@ export const Portfolio = () => {
     };
 
     useEffect(() => {
-        fetchPrices();
+        if (holdings.length > 0) fetchPrices();
     }, [holdings.length]);
 
-    // Compute live holdings
+    // ── Compute live holdings ──
     const liveHoldings: LiveHolding[] = holdings.map(h => {
         const priceData = livePrices[h.symbol];
         const currentPrice = priceData?.price || 0;
@@ -93,8 +128,9 @@ export const Portfolio = () => {
         const plPercent = investedValue > 0 ? (plValue / investedValue) * 100 : 0;
         const change = priceData?.change || 0;
         const { verdict, icon } = getVerdict(plPercent, change);
+        const name = priceData?.name || h.name || h.symbol;
 
-        return { ...h, currentPrice, currency, plPercent, plValue, totalValue, change, verdict, verdictIcon: icon };
+        return { ...h, name, currentPrice, currency, plPercent, plValue, totalValue, change, verdict, verdictIcon: icon };
     });
 
     const totalValue = liveHoldings.reduce((sum, h) => sum + h.totalValue, 0);
@@ -102,7 +138,6 @@ export const Portfolio = () => {
     const totalPL = totalValue - totalInvested;
     const totalPLPercent = totalInvested > 0 ? (totalPL / totalInvested) * 100 : 0;
 
-    // Determine dominant currency
     const indianCount = liveHoldings.filter(h => h.currency === 'INR').length;
     const displayCurrency = indianCount >= liveHoldings.length / 2 ? 'INR' : 'USD';
     const currencySymbol = displayCurrency === 'INR' ? '₹' : '$';
@@ -116,19 +151,40 @@ export const Portfolio = () => {
     )));
     const isHighRisk = riskScore >= 70;
 
-    const removeHolding = (symbol: string) => {
+    // ── Remove Holding (Supabase) ──
+    const handleRemoveHolding = async (symbol: string) => {
+        const holding = holdings.find(h => h.symbol === symbol);
+        if (!holding) return;
+
+        // Optimistic UI update
         setHoldings(prev => prev.filter(h => h.symbol !== symbol));
+
+        if (holding.holdingId) {
+            const ok = await dbRemoveHolding(holding.holdingId);
+            if (!ok) {
+                // Rollback on failure
+                setHoldings(prev => [...prev, holding]);
+                console.error('Failed to remove holding from Supabase');
+            }
+        }
     };
 
-    const addHolding = (holding: Holding) => {
-        setHoldings(prev => {
-            const existing = prev.find(h => h.symbol === holding.symbol);
-            if (existing) {
-                return prev.map(h => h.symbol === holding.symbol ? { ...h, quantity: h.quantity + holding.quantity, avgPrice: holding.avgPrice } : h);
-            }
-            return [...prev, holding];
-        });
+    // ── Add Holding (Supabase) ──
+    const handleAddHolding = async (holding: Holding) => {
+        if (!portfolioId) return;
         setShowAddModal(false);
+
+        await dbAddHolding(
+            portfolioId,
+            holding.symbol,
+            holding.type,
+            holding.quantity,
+            holding.avgPrice
+        );
+
+        // Always reload from DB to get current state
+        const dbHoldings = await getHoldings(portfolioId);
+        setHoldings(dbHoldings.map(mapDbHolding));
     };
 
     const formatCurrency = (value: number, cur: string) => {
@@ -136,12 +192,36 @@ export const Portfolio = () => {
         return `${sym}${Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
+    // ── Loading state from Supabase ──
+    if (dbLoading) {
+        return (
+            <div className="flex items-center justify-center h-72">
+                <div className="text-center">
+                    <div className="relative h-14 w-14 mx-auto mb-4">
+                        <div className="absolute inset-0 rounded-full border-4 border-slate-800" />
+                        <div className="absolute inset-0 rounded-full border-4 border-t-cyan-500 animate-spin" />
+                    </div>
+                    <p className="text-slate-300 font-medium flex items-center gap-2 justify-center">
+                        <Database className="h-4 w-4 text-cyan-400" />
+                        Loading Portfolio from Supabase…
+                    </p>
+                    <p className="text-slate-600 text-xs mt-1">Fetching your holdings from the cloud</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="space-y-6">
             <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-100">Portfolio Intelligence</h2>
-                    <p className="text-slate-400">AI-powered risk analysis and performance tracking</p>
+                    <p className="text-slate-400 flex items-center gap-2">
+                        AI-powered risk analysis and performance tracking
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                            <Database className="h-2.5 w-2.5" /> Cloud Synced
+                        </span>
+                    </p>
                 </div>
                 <div className="flex gap-3">
                     <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-2 text-sm font-medium text-white hover:bg-cyan-600 transition-colors">
@@ -227,8 +307,8 @@ export const Portfolio = () => {
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`h-9 w-9 rounded-lg flex items-center justify-center font-bold text-sm ${item.verdict === 'HYPE BUBBLE' ? 'bg-red-500/10 text-red-400' :
-                                                            item.verdict === 'VALUE BUY' ? 'bg-emerald-500/10 text-emerald-400' :
-                                                                'bg-slate-800 text-slate-300'
+                                                        item.verdict === 'VALUE BUY' ? 'bg-emerald-500/10 text-emerald-400' :
+                                                            'bg-slate-800 text-slate-300'
                                                         }`}>{item.symbol.slice(0, 2)}</div>
                                                     <div>
                                                         <div className="font-medium text-slate-200">{item.name}</div>
@@ -282,7 +362,7 @@ export const Portfolio = () => {
                                                 </AnimatePresence>
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                <button onClick={() => removeHolding(item.symbol)} className="rounded-lg p-1.5 text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 transition-colors" title="Remove">
+                                                <button onClick={() => handleRemoveHolding(item.symbol)} className="rounded-lg p-1.5 text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 transition-colors" title="Remove">
                                                     <Trash2 className="h-4 w-4" />
                                                 </button>
                                             </td>
@@ -297,7 +377,7 @@ export const Portfolio = () => {
 
             {/* Add Stock Modal */}
             <AnimatePresence>
-                {showAddModal && <AddStockModal onClose={() => setShowAddModal(false)} onAdd={addHolding} />}
+                {showAddModal && <AddStockModal onClose={() => setShowAddModal(false)} onAdd={handleAddHolding} />}
             </AnimatePresence>
 
             {/* Rebalance Modal */}
@@ -364,10 +444,17 @@ const AddStockModal = ({ onClose, onAdd }: AddStockModalProps) => {
     const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
     const [selectedAsset, setSelectedAsset] = useState<SearchResult | null>(null);
     const [quantity, setQuantity] = useState('');
-    const [avgPrice, setAvgPrice] = useState('');
     const [showDropdown, setShowDropdown] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [fetchingPrice, setFetchingPrice] = useState(false);
+    const [marketPrice, setMarketPrice] = useState<number | null>(null);
+    const [marketCurrency, setMarketCurrency] = useState('INR');
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const currencySymbol = marketCurrency === 'INR' ? '₹' : '$';
+    const qty = parseFloat(quantity) || 0;
+    const totalInvestment = marketPrice ? qty * marketPrice : 0;
 
     useEffect(() => {
         if (!searchQuery.trim()) { setSuggestions([]); setShowDropdown(false); return; }
@@ -390,21 +477,38 @@ const AddStockModal = ({ onClose, onAdd }: AddStockModalProps) => {
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
-    const selectAsset = (asset: SearchResult) => {
+    // Auto-fetch live market price when an asset is selected
+    const selectAsset = async (asset: SearchResult) => {
         setSelectedAsset(asset);
         setSearchQuery('');
         setShowDropdown(false);
+        setMarketPrice(null);
+
+        setFetchingPrice(true);
+        try {
+            const prices = await getPortfolioPrices([asset.symbol]);
+            const priceData = prices[asset.symbol];
+            if (priceData?.price) {
+                setMarketPrice(priceData.price);
+                setMarketCurrency(priceData.currency || 'INR');
+            }
+        } catch (err) {
+            console.error('Failed to fetch market price:', err);
+        }
+        setFetchingPrice(false);
     };
 
-    const handleSubmit = () => {
-        if (!selectedAsset || !quantity || !avgPrice) return;
-        onAdd({
+    const handleSubmit = async () => {
+        if (!selectedAsset || !quantity || !marketPrice || submitting) return;
+        setSubmitting(true);
+        await onAdd({
             symbol: selectedAsset.symbol,
             name: selectedAsset.name,
-            quantity: parseFloat(quantity),
-            avgPrice: parseFloat(avgPrice),
+            quantity: qty,
+            avgPrice: marketPrice,
             type: selectedAsset.type,
         });
+        setSubmitting(false);
     };
 
     return (
@@ -424,7 +528,7 @@ const AddStockModal = ({ onClose, onAdd }: AddStockModalProps) => {
                                 <div className="font-semibold text-slate-100">{selectedAsset.symbol}</div>
                                 <div className="text-xs text-slate-400">{selectedAsset.name} · {selectedAsset.exchange}</div>
                             </div>
-                            <button onClick={() => setSelectedAsset(null)} className="text-slate-500 hover:text-rose-400 transition-colors"><X className="h-4 w-4" /></button>
+                            <button onClick={() => { setSelectedAsset(null); setMarketPrice(null); }} className="text-slate-500 hover:text-rose-400 transition-colors"><X className="h-4 w-4" /></button>
                         </div>
                     ) : (
                         <div className="relative" ref={dropdownRef}>
@@ -454,40 +558,74 @@ const AddStockModal = ({ onClose, onAdd }: AddStockModalProps) => {
                     )}
                 </div>
 
-                {/* Quantity + Avg Price */}
-                <div className="grid grid-cols-2 gap-3 mb-5">
-                    <div>
-                        <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">Quantity</label>
-                        <input
-                            type="number"
-                            placeholder="e.g. 50"
-                            value={quantity}
-                            onChange={e => setQuantity(e.target.value)}
-                            className="w-full h-10 rounded-lg border border-slate-700 bg-slate-800 px-4 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-                        />
+                {/* Market Price Display (read-only) */}
+                {selectedAsset && (
+                    <div className="mb-4 rounded-lg border border-slate-800 bg-slate-950/50 p-3">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Current Market Price</span>
+                            {fetchingPrice ? (
+                                <span className="flex items-center gap-1.5 text-xs text-cyan-400">
+                                    <RefreshCw className="h-3 w-3 animate-spin" /> Fetching live price…
+                                </span>
+                            ) : marketPrice ? (
+                                <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold">
+                                    <Zap className="h-3 w-3" /> Live
+                                </span>
+                            ) : (
+                                <span className="text-xs text-rose-400">Unavailable</span>
+                            )}
+                        </div>
+                        <div className="mt-1.5 text-2xl font-bold text-white">
+                            {fetchingPrice ? '...' : marketPrice ? `${currencySymbol}${marketPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}
+                        </div>
                     </div>
-                    <div>
-                        <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">Avg Buy Price</label>
-                        <input
-                            type="number"
-                            placeholder="e.g. 2400"
-                            value={avgPrice}
-                            onChange={e => setAvgPrice(e.target.value)}
-                            className="w-full h-10 rounded-lg border border-slate-700 bg-slate-800 px-4 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-                        />
-                    </div>
+                )}
+
+                {/* Quantity */}
+                <div className="mb-4">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">Quantity</label>
+                    <input
+                        type="number"
+                        placeholder="e.g. 50"
+                        value={quantity}
+                        onChange={e => setQuantity(e.target.value)}
+                        className="w-full h-10 rounded-lg border border-slate-700 bg-slate-800 px-4 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                    />
                 </div>
+
+                {/* Total Investment */}
+                {marketPrice && qty > 0 && (
+                    <div className="mb-5 rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3">
+                        <div className="text-[10px] uppercase tracking-wider text-cyan-400/70 font-semibold">Total Investment</div>
+                        <div className="text-xl font-bold text-cyan-400 mt-0.5">
+                            {currencySymbol}{totalInvestment.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                        <div className="text-[10px] text-slate-500 mt-1">
+                            {qty} × {currencySymbol}{marketPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })} per unit
+                        </div>
+                    </div>
+                )}
 
                 {/* Action */}
                 <button
                     onClick={handleSubmit}
-                    disabled={!selectedAsset || !quantity || !avgPrice}
+                    disabled={!selectedAsset || !quantity || !marketPrice || submitting || fetchingPrice}
                     className="w-full flex items-center justify-center gap-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2.5 text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                    <Plus className="h-4 w-4" />
-                    Add to Portfolio
+                    {submitting ? (
+                        <>
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                            Saving to Cloud…
+                        </>
+                    ) : (
+                        <>
+                            <Plus className="h-4 w-4" />
+                            Add to Portfolio
+                        </>
+                    )}
                 </button>
             </motion.div>
         </motion.div>
     );
 };
+

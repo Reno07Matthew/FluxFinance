@@ -1,6 +1,16 @@
 import axios from 'axios';
+import { supabase } from '@/lib/supabase';
 
 const API_BASE = 'http://127.0.0.1:8000';
+
+// Attach Supabase auth token to every request
+axios.interceptors.request.use(async (config) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+        config.headers.Authorization = `Bearer ${session.access_token}`;
+    }
+    return config;
+});
 
 export interface AnalysisData {
     symbol: string;

@@ -1,10 +1,11 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from data_provider import get_market_data, search_symbols, get_batch_market_data
 from ai_engine import analyze_sentiment
 from technical_engine import calculate_flux_indicators, calculate_technicals
 from flux_engine import calculate_flux_verdict, generate_flux_verdict
 from streamer import get_quick_stock_snapshot, get_quick_crypto_snapshot
+from auth_middleware import verify_auth
 
 import yfinance as yf
 import pandas as pd

@@ -4,12 +4,16 @@ import { Home } from '@/app/components/Home';
 import { AnalysisPage } from '@/app/components/AnalysisPage';
 import { Markets } from '@/app/components/Markets';
 import { Portfolio } from '@/app/components/Portfolio';
+import { AntiGravityDashboard } from '@/app/components/AntiGravityDashboard';
+import { AuthPage } from '@/app/components/AuthPage';
 import { MarketProvider, useMarket } from '@/context/MarketContext';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { analyzeAsset } from '@/services/api';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState('Home');
   const { data, setData, loading, setLoading, error, setError, symbol, assetType } = useMarket();
+  const { user, loading: authLoading } = useAuth();
 
   const fetchData = async () => {
     setLoading(true);
@@ -34,8 +38,28 @@ function AppContent() {
   const renderContent = () => {
     if (currentPage === 'Home') return <Home onNavigate={setCurrentPage} onAnalyze={fetchData} />;
 
+    if (currentPage === 'Dashboard') return <AntiGravityDashboard />;
+
     if (currentPage === 'Markets') return <Markets onNavigate={setCurrentPage} onAnalyze={fetchData} />;
-    if (currentPage === 'Portfolio') return <Portfolio />;
+
+    // Portfolio requires authentication
+    if (currentPage === 'Portfolio') {
+      if (authLoading) {
+        return (
+          <div className="flex items-center justify-center h-72">
+            <div className="text-center">
+              <div className="relative h-14 w-14 mx-auto mb-4">
+                <div className="absolute inset-0 rounded-full border-4 border-slate-800" />
+                <div className="absolute inset-0 rounded-full border-4 border-t-cyan-500 animate-spin" />
+              </div>
+              <p className="text-slate-400 text-sm">Loading...</p>
+            </div>
+          </div>
+        );
+      }
+      if (!user) return <AuthPage />;
+      return <Portfolio />;
+    }
 
     // Analysis page (loading / error / content)
     if (loading) {
@@ -84,8 +108,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <MarketProvider>
-      <AppContent />
-    </MarketProvider>
+    <AuthProvider>
+      <MarketProvider>
+        <AppContent />
+      </MarketProvider>
+    </AuthProvider>
   );
 }
