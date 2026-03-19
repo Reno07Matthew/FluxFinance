@@ -51,61 +51,42 @@ export const AuthPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center relative overflow-hidden">
-            {/* Animated Background */}
-            <div className="absolute inset-0">
-                {/* Gradient orbs */}
-                <div className="absolute top-1/4 -left-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" />
-                <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/5 rounded-full blur-3xl" />
-
-                {/* Grid pattern */}
-                <div className="absolute inset-0 opacity-[0.03]"
-                    style={{
-                        backgroundImage: 'linear-gradient(rgba(6, 182, 212, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.3) 1px, transparent 1px)',
-                        backgroundSize: '60px 60px'
-                    }}
-                />
-            </div>
-
+        <div className="min-h-screen bg-[#0c0c0e] flex items-center justify-center relative">
             {/* Main Card */}
             <div className="relative w-full max-w-md mx-4">
                 {/* Logo & Title */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center gap-3 mb-4">
-                        <div className="relative">
-                            <div className="absolute inset-0 bg-cyan-500/30 rounded-xl blur-lg" />
-                            <div className="relative bg-slate-900 border border-cyan-500/30 rounded-xl p-3">
-                                <Activity className="h-8 w-8 text-cyan-400" />
-                            </div>
+                        <div className="relative bg-[#18181b] border border-[#27272a] rounded-xl p-3">
+                            <Activity className="h-8 w-8 text-white" />
                         </div>
-                        <h1 className="text-3xl font-bold text-slate-100">
-                            Flux <span className="text-cyan-400">Finance</span>
+                        <h1 className="text-3xl font-bold text-white tracking-tight">
+                            Flux <span className="font-normal text-zinc-400">Finance</span>
                         </h1>
                     </div>
-                    <p className="text-slate-400 text-sm">
-                        AI-powered market intelligence at your fingertips
+                    <p className="text-zinc-500 text-sm">
+                        Institutional market intelligence
                     </p>
                 </div>
 
                 {/* Card */}
-                <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-8 shadow-2xl shadow-cyan-500/5">
+                <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-8 shadow-2xl">
                     {/* Tab Toggle */}
-                    <div className="flex bg-slate-800/50 rounded-lg p-1 mb-6">
+                    <div className="flex bg-[#0c0c0e] border border-[#27272a] rounded-lg p-1 mb-6">
                         <button
                             onClick={() => { setIsSignUp(false); setError(null); setSuccess(null); }}
-                            className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${!isSignUp
-                                    ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-500/25'
-                                    : 'text-slate-400 hover:text-slate-300'
+                            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200 ${!isSignUp
+                                    ? 'bg-[#27272a] text-white'
+                                    : 'text-zinc-500 hover:text-zinc-300'
                                 }`}
                         >
                             Sign In
                         </button>
                         <button
                             onClick={() => { setIsSignUp(true); setError(null); setSuccess(null); }}
-                            className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${isSignUp
-                                    ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-500/25'
-                                    : 'text-slate-400 hover:text-slate-300'
+                            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200 ${isSignUp
+                                    ? 'bg-[#27272a] text-white'
+                                    : 'text-zinc-500 hover:text-zinc-300'
                                 }`}
                         >
                             Sign Up
@@ -130,45 +111,45 @@ export const AuthPage = () => {
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {isSignUp && (
                             <div>
-                                <label className="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider">
+                                <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">
                                     Full Name
                                 </label>
                                 <div className="relative">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" strokeWidth={1.5} />
                                     <input
                                         type="text"
                                         value={fullName}
                                         onChange={(e) => setFullName(e.target.value)}
                                         placeholder="John Doe"
-                                        className="w-full h-11 pl-10 pr-4 rounded-lg border border-slate-700/80 bg-slate-800/50 text-slate-100 text-sm placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-colors"
+                                        className="w-full h-11 pl-10 pr-4 rounded-lg border border-[#27272a] bg-[#0c0c0e] text-white text-sm placeholder:text-zinc-600 focus:border-white focus:outline-none focus:ring-1 focus:ring-white transition-colors"
                                     />
                                 </div>
                             </div>
                         )}
 
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider">
+                            <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">
                                 Email Address
                             </label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" strokeWidth={1.5} />
                                 <input
                                     type="email"
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="you@example.com"
-                                    className="w-full h-11 pl-10 pr-4 rounded-lg border border-slate-700/80 bg-slate-800/50 text-slate-100 text-sm placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-colors"
+                                    className="w-full h-11 pl-10 pr-4 rounded-lg border border-[#27272a] bg-[#0c0c0e] text-white text-sm placeholder:text-zinc-600 focus:border-white focus:outline-none focus:ring-1 focus:ring-white transition-colors"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider">
+                            <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">
                                 Password
                             </label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" strokeWidth={1.5} />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     required
@@ -176,32 +157,29 @@ export const AuthPage = () => {
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
                                     minLength={6}
-                                    className="w-full h-11 pl-10 pr-11 rounded-lg border border-slate-700/80 bg-slate-800/50 text-slate-100 text-sm placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-colors"
+                                    className="w-full h-11 pl-10 pr-11 rounded-lg border border-[#27272a] bg-[#0c0c0e] text-white text-sm placeholder:text-zinc-600 focus:border-white focus:outline-none focus:ring-1 focus:ring-white transition-colors"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
                                 >
-                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    {showPassword ? <EyeOff className="h-4 w-4" strokeWidth={1.5} /> : <Eye className="h-4 w-4" strokeWidth={1.5} />}
                                 </button>
                             </div>
-                            {isSignUp && (
-                                <p className="text-xs text-slate-500 mt-1">Minimum 6 characters</p>
-                            )}
                         </div>
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full h-11 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-sm font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30"
+                            className="w-full h-11 bg-white hover:bg-zinc-200 text-black text-sm font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-80 disabled:cursor-not-allowed mt-2"
                         >
                             {loading ? (
-                                <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <div className="h-4 w-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                             ) : (
                                 <>
                                     {isSignUp ? 'Create Account' : 'Sign In'}
-                                    <ArrowRight className="h-4 w-4" />
+                                    <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
                                 </>
                             )}
                         </button>
@@ -210,17 +188,17 @@ export const AuthPage = () => {
                     {/* Divider */}
                     <div className="relative my-6">
                         <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-slate-700/60" />
+                            <div className="w-full border-t border-[#27272a]" />
                         </div>
-                        <div className="relative flex justify-center text-xs">
-                            <span className="bg-slate-900/80 px-3 text-slate-500 uppercase tracking-wider">or</span>
+                        <div className="relative flex justify-center text-[10px]">
+                            <span className="bg-[#18181b] px-3 text-zinc-500 uppercase tracking-widest font-medium">or</span>
                         </div>
                     </div>
 
                     {/* Google Sign-In */}
                     <button
                         onClick={handleGoogleSignIn}
-                        className="w-full h-11 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 text-slate-300 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-3"
+                        className="w-full h-11 bg-[#0c0c0e] hover:bg-[#1f1f23] border border-[#27272a] hover:border-zinc-500 text-zinc-300 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-3"
                     >
                         <svg className="h-4 w-4" viewBox="0 0 24 24">
                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
@@ -233,7 +211,7 @@ export const AuthPage = () => {
                 </div>
 
                 {/* Footer */}
-                <p className="text-center text-xs text-slate-600 mt-6">
+                <p className="text-center text-xs text-zinc-600 mt-6">
                     By continuing, you agree to Flux Finance's Terms of Service
                 </p>
             </div>
