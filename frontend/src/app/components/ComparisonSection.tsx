@@ -15,15 +15,15 @@ export const ComparisonSection = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.8 }}
-      className="space-y-4 rounded-xl border border-slate-800 bg-slate-900/50 p-6 backdrop-blur-sm"
+      className="space-y-4 rounded-xl bg-white dark:bg-slate-900/50 border border-gray-200 dark:border-slate-800 shadow-sm dark:shadow-none p-6 backdrop-blur-sm"
     >
       <div className="flex items-center justify-between">
         <div>
-            <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
-                <GitCompare className="h-5 w-5 text-purple-400" />
+            <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
+                <GitCompare className="h-5 w-5 text-purple-500 dark:text-purple-400" />
                 Flux Logic Comparison
             </h3>
-            <p className="text-sm text-slate-400">Emotion vs. Reality Analysis</p>
+            <p className="text-sm text-gray-500 dark:text-slate-400 font-medium">Emotion vs. Reality Analysis</p>
         </div>
         <div className="flex gap-2">
              <span className="flex items-center gap-1 rounded-full bg-rose-500/10 px-3 py-1 text-xs font-medium text-rose-400 border border-rose-500/20">
@@ -40,9 +40,9 @@ export const ComparisonSection = () => {
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Insight Cards */}
         <div className="space-y-4 lg:col-span-1">
-            <div className="rounded-lg border border-slate-700 bg-slate-800/30 p-4">
-                <h4 className="text-sm font-semibold text-slate-200 mb-2">Sentiment-Price Divergence</h4>
-                <p className="text-xs text-slate-400 mb-3">
+            <div className="rounded-lg bg-gray-50 dark:bg-slate-800/30 border border-gray-200 dark:border-slate-700 p-4">
+                <h4 className="text-sm font-semibold text-text-primary mb-2">Sentiment-Price Divergence</h4>
+                <p className="text-xs text-gray-500 dark:text-slate-400 font-medium mb-3">
                     Price is making higher highs while social sentiment is making lower highs. This bearish divergence often precedes a correction.
                 </p>
                 <div className="h-1 w-full rounded-full bg-slate-700">
@@ -53,9 +53,9 @@ export const ComparisonSection = () => {
                     <span className="text-rose-400">85% High</span>
                 </div>
             </div>
-             <div className="rounded-lg border border-slate-700 bg-slate-800/30 p-4">
-                <h4 className="text-sm font-semibold text-slate-200 mb-2">Panic vs. Fundamentals</h4>
-                <p className="text-xs text-slate-400">
+             <div className="rounded-lg bg-gray-50 dark:bg-slate-800/30 border border-gray-200 dark:border-slate-700 p-4">
+                <h4 className="text-sm font-semibold text-text-primary mb-2">Panic vs. Fundamentals</h4>
+                <p className="text-xs text-gray-500 dark:text-slate-400 font-medium">
                     Market panic score is elevated (78/100) but fundamental indicators remain stable. Potential buying opportunity.
                 </p>
             </div>

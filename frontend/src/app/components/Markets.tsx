@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { AreaChart, Area, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, ResponsiveContainer } from 'recharts';
 import {
   TrendingUp, TrendingDown, RefreshCw, BarChart3, ScanSearch,
   ArrowUpRight, ArrowDownRight, ArrowUpDown, Activity, Star, Zap
@@ -27,6 +27,7 @@ function MiniSparkline({ positive }: { positive: boolean }) {
     <div className="h-6 w-16" aria-hidden="true">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={pts}>
+          <XAxis dataKey="i" hide padding={{ left: 0, right: 0 }} />
           <defs>
             <linearGradient id={`tsp-${positive ? 'g' : 'r'}`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={color} stopOpacity={0.2} />
@@ -53,6 +54,7 @@ function IndexSparkline({ positive }: { positive: boolean }) {
     <div className="h-10 w-24" aria-hidden="true">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={pts}>
+          <XAxis dataKey="i" hide padding={{ left: 0, right: 0 }} />
           <defs>
             <linearGradient id={`isp-${positive ? 'g' : 'r'}`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={color} stopOpacity={0.2} />
@@ -68,7 +70,7 @@ function IndexSparkline({ positive }: { positive: boolean }) {
 
 type SortKey = 'symbol' | 'price' | 'change';
 type SortDir = 'asc' | 'desc';
-const tabs = ['All', 'Stocks', 'Crypto'] as const;
+const tabs = ['All', 'Stocks'] as const;
 type Tab = typeof tabs[number];
 
 export const Markets = ({ onNavigate, onAnalyze }: MarketsProps) => {
@@ -144,24 +146,18 @@ export const Markets = ({ onNavigate, onAnalyze }: MarketsProps) => {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-sans font-semibold text-text-primary">Markets Overview</h1>
-          <p className="text-sm text-text-tertiary mt-0.5">Live prices and performance · {filtered.length} assets</p>
+          <p className="text-sm text-gray-500 dark:text-zinc-400 font-medium mt-0.5">Live prices and performance · {filtered.length} assets</p>
         </div>
         <div className="flex items-center gap-2">
           {/* Stock / Crypto toggle */}
-          <div className="flex rounded-lg border border-border bg-bg-card p-0.5" role="group" aria-label="Asset type">
+          <div className="flex rounded-lg bg-white dark:bg-bg-card border border-gray-200 dark:border-border p-0.5" role="group" aria-label="Asset type">
             <button onClick={() => setCategory('stock')}
-              className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition-colors min-h-[44px]
-                ${category === 'stock' ? 'bg-bg-elevated text-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}>
-              <BarChart3 className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" /> Stocks
-            </button>
-            <button onClick={() => setCategory('crypto')}
-              className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition-colors min-h-[44px]
-                ${category === 'crypto' ? 'bg-bg-elevated text-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}>
-              <Zap className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" /> Crypto
+              className="flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-bg-elevated text-text-primary min-h-[44px]">
+              <BarChart3 className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" /> Indian Stocks
             </button>
           </div>
           <button onClick={fetchMarkets} disabled={loading}
-            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-text-tertiary hover:text-text-primary hover:bg-bg-hover transition-colors disabled:opacity-50 min-h-[44px]"
+            className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-border px-3 py-1.5 text-xs text-gray-500 dark:text-zinc-400 font-medium hover:text-text-primary hover:bg-gray-50 dark:hover:bg-bg-hover transition-colors disabled:opacity-50 min-h-[44px]"
             aria-label="Refresh market data">
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} strokeWidth={1.5} aria-hidden="true" /> Refresh
           </button>
@@ -176,10 +172,10 @@ export const Markets = ({ onNavigate, onAnalyze }: MarketsProps) => {
               const pos = idx.change >= 0;
               return (
                 <button key={idx.symbol} onClick={() => goTo(idx)}
-                  className="rounded-xl border border-border bg-bg-card p-4 text-left hover:bg-bg-hover transition-colors min-h-[44px]"
+                  className="rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none p-4 text-left hover:bg-gray-50 dark:hover:bg-bg-hover transition-colors min-h-[44px]"
                   aria-label={`${idx.name}: ${cur(idx.currency)}${idx.price.toLocaleString()}, ${pos ? 'up' : 'down'} ${Math.abs(idx.change).toFixed(2)}%`}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider">{idx.name}</span>
+                    <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">{idx.name}</span>
                     <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold
                       ${pos ? 'text-success' : 'text-danger'}`}>
                       {pos ? <ArrowUpRight className="h-3 w-3" strokeWidth={2} aria-hidden="true" /> : <ArrowDownRight className="h-3 w-3" strokeWidth={2} aria-hidden="true" />}
@@ -206,27 +202,27 @@ export const Markets = ({ onNavigate, onAnalyze }: MarketsProps) => {
         <div className="space-y-3">
           {/* Tabs + Filter */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex rounded-lg border border-border bg-bg-card p-0.5" role="tablist" aria-label="Asset filter tabs">
+            <div className="flex rounded-lg bg-white dark:bg-bg-card border border-gray-200 dark:border-border p-0.5" role="tablist" aria-label="Asset filter tabs">
               {tabs.map(t => (
                 <button key={t} role="tab" aria-selected={activeTab === t}
                   onClick={() => setActiveTab(t)}
                   className={`px-3 py-1.5 rounded text-xs font-medium transition-colors min-h-[44px]
-                    ${activeTab === t ? 'bg-bg-elevated text-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}>
+                    ${activeTab === t ? 'bg-gray-100 dark:bg-bg-elevated text-text-primary shadow-sm' : 'text-gray-500 dark:text-zinc-400 hover:text-text-secondary'}`}>
                   {t}
                 </button>
               ))}
             </div>
             <div className="relative w-full sm:w-64">
-              <ScanSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-disabled" strokeWidth={1.5} aria-hidden="true" />
+              <ScanSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 dark:text-text-disabled" strokeWidth={1.5} aria-hidden="true" />
               <input type="search" placeholder="Filter assets..."
                 value={filter} onChange={e => setFilter(e.target.value)}
-                className="h-8 w-full rounded-lg border border-border bg-bg-card pl-8 pr-3 text-xs text-text-primary placeholder:text-text-disabled focus:border-accent focus:outline-none transition-colors"
+                className="h-9 w-full rounded-lg bg-white dark:bg-bg-card border border-gray-200 dark:border-border pl-8 pr-3 text-xs text-text-primary placeholder:text-gray-400 dark:placeholder:text-text-disabled focus:border-accent focus:outline-none transition-colors"
                 aria-label="Filter stocks by name or ticker" />
             </div>
           </div>
 
           {/* Data Table */}
-          <div className="rounded-xl border border-border bg-bg-card overflow-hidden">
+          <div className="rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none overflow-hidden">
             {loading ? (
               <div className="p-12 text-center" role="status">
                 <div className="relative h-8 w-8 mx-auto mb-3">
@@ -240,13 +236,13 @@ export const Markets = ({ onNavigate, onAnalyze }: MarketsProps) => {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full" role="table" aria-label="Market assets">
-                  <thead className="border-b border-border">
+                  <thead className="border-b border-gray-200 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02]">
                     <tr>
                       <SortHeader label="Asset" k="symbol" />
                       <SortHeader label="Price" k="price" align="right" />
                       <SortHeader label="24h %" k="change" align="right" />
-                      <th className="px-4 py-3 text-xs font-semibold text-text-tertiary uppercase tracking-wider text-center">7d</th>
-                      <th className="px-4 py-3 text-xs font-semibold text-text-tertiary uppercase tracking-wider text-left">Exchange</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider text-center">7d</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider text-left">Exchange</th>
                       <th className="px-4 py-3" />
                     </tr>
                   </thead>
@@ -327,10 +323,10 @@ function SidebarList({ title, items, type, loading, goTo, cur }: {
   const Icon = type === 'gain' ? TrendingUp : type === 'loss' ? TrendingDown : Activity;
   const iconColor = type === 'gain' ? 'text-success-muted' : type === 'loss' ? 'text-danger-muted' : 'text-accent-muted';
   return (
-    <div className="rounded-xl border border-border bg-bg-card">
-      <div className="px-4 py-2.5 border-b border-border flex items-center gap-1.5">
+    <div className="rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none">
+      <div className="px-4 py-2.5 border-b border-gray-200 dark:border-white/5 flex items-center gap-1.5">
         <Icon className={`h-3.5 w-3.5 ${iconColor}`} strokeWidth={1.5} aria-hidden="true" />
-        <h3 className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider">{title}</h3>
+        <h3 className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">{title}</h3>
       </div>
       <div className="divide-y divide-border/30" role="list">
         {loading ? (

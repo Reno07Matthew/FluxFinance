@@ -113,3 +113,9 @@ export const checkHealth = async () => {
     const response = await axios.get(`${API_BASE}/`);
     return response.data;
 };
+
+export const getGlobalMarketNews = async (): Promise<{ title: string; url: string; av_sentiment_score?: number }[]> => {
+    const response = await axios.get(`${API_BASE}/market_news`);
+    return response.data.headlines;
+};
+

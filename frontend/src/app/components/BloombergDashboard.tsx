@@ -9,11 +9,11 @@ import {
 // ─── Mock Data ──────────────────────────────────────────────────────────────
 
 const indices = [
-  { name: 'S&P 500', value: '5,346.99', change: 1.42, currency: '$' },
-  { name: 'NASDAQ', value: '16,801.54', change: 2.15, currency: '$' },
-  { name: 'Nifty 50', value: '23,465.10', change: -0.34, currency: '₹' },
-  { name: 'Sensex', value: '77,301.08', change: -0.51, currency: '₹' },
-  { name: 'DOW', value: '39,671.04', change: 0.89, currency: '$' },
+  { name: 'Nifty 50', value: '23,465.10', change: 0.34, currency: '₹' },
+  { name: 'Sensex', value: '77,301.08', change: 0.51, currency: '₹' },
+  { name: 'Bank Nifty', value: '50,432.85', change: -0.12, currency: '₹' },
+  { name: 'Nifty IT', value: '35,890.40', change: 1.15, currency: '₹' },
+  { name: 'Nifty Auto', value: '24,150.20', change: 0.82, currency: '₹' },
 ];
 
 const topGainers = [
@@ -78,8 +78,8 @@ export const BloombergDashboard = ({ onNavigate, onAnalyze }: DashboardProps) =>
             const up = idx.change >= 0;
             return (
               <div key={idx.name}
-                className="group rounded-xl border border-border bg-bg-card p-4 hover:bg-bg-elevated transition-all duration-200 cursor-pointer">
-                <p className="text-xs text-text-disabled font-medium mb-1.5">{idx.name}</p>
+                className="group rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-all duration-200 cursor-pointer">
+                <p className="text-xs text-gray-500 dark:text-zinc-400 font-medium mb-1.5">{idx.name}</p>
                 <div className="flex items-end justify-between">
                   <span className="text-lg font-bold font-mono-num text-text-primary">{idx.value}</span>
                   <span className={`inline-flex items-center gap-0.5 text-xs font-semibold font-mono-num ${up ? 'text-success' : 'text-danger'}`}>
@@ -98,11 +98,11 @@ export const BloombergDashboard = ({ onNavigate, onAnalyze }: DashboardProps) =>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         {/* Featured Chart (2/3 span) */}
-        <motion.div variants={child} className="lg:col-span-2 rounded-xl border border-border bg-bg-card p-6">
+        <motion.div variants={child} className="lg:col-span-2 rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none p-6 flex flex-col min-h-[520px]">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="text-lg font-semibold text-text-primary">Market Overview</h2>
-              <p className="text-xs text-text-disabled mt-0.5">S&P 500 · Daily Performance</p>
+              <p className="text-xs text-gray-500 dark:text-zinc-400 font-medium mt-0.5">Nifty 50 · Daily Performance</p>
             </div>
             <div className="flex items-center gap-1 bg-bg-elevated rounded-lg p-1">
               {['1D', '1W', '1M', '3M'].map(tf => (
@@ -114,22 +114,22 @@ export const BloombergDashboard = ({ onNavigate, onAnalyze }: DashboardProps) =>
               ))}
             </div>
           </div>
-          <div className="h-56">
+          <div className="flex-1 w-full min-h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={chartData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.15} />
-                    <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
+                  <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} vertical={false} />
-                <XAxis dataKey="date" hide />
+                <XAxis dataKey="date" hide padding={{ left: 0, right: 0 }} />
                 <YAxis yAxisId="price" hide domain={['dataMin - 2', 'dataMax + 2']} />
-                <YAxis yAxisId="volume" hide domain={[0, 'dataMax * 3']} />
+                <YAxis yAxisId="volume" orientation="right" hide domain={[0, 'dataMax * 5']} />
                 <Tooltip contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '12px' }} />
-                <Area yAxisId="price" type="monotone" dataKey="value" stroke="var(--accent)" strokeWidth={2} fill="url(#chartGrad)" dot={false} />
-                <Bar yAxisId="volume" dataKey="volume" fill="rgba(255,255,255,0.1)" barSize={4} />
+                <Area yAxisId="price" type="monotone" dataKey="value" stroke="var(--accent)" strokeWidth={2} fill="url(#colorPrice)" dot={false} />
+                <Bar yAxisId="volume" dataKey="volume" fill="#ffffff" opacity={0.1} barSize={6} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
@@ -138,19 +138,19 @@ export const BloombergDashboard = ({ onNavigate, onAnalyze }: DashboardProps) =>
         {/* Gainers + Losers (1/3 span, stacked) */}
         <div className="space-y-4">
           {/* Top Gainers */}
-          <motion.div variants={child} className="rounded-xl border border-border bg-bg-card overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-border flex items-center gap-2">
+          <motion.div variants={child} className="rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-gray-200 dark:border-white/5 flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-success" strokeWidth={1.5} />
               <h3 className="text-sm font-semibold text-text-primary">Top Gainers</h3>
             </div>
-            <div className="divide-y divide-border/50">
+            <div className="divide-y border-gray-200 dark:border-white/5">
               {topGainers.map(s => (
                 <button key={s.symbol}
                   className="w-full flex items-center justify-between px-5 py-2.5 hover:bg-bg-hover transition-colors group"
                   onClick={() => { if (onNavigate) onNavigate('Analysis'); }}>
                   <div className="text-left">
                     <p className="text-sm font-medium text-text-primary group-hover:text-accent transition-colors">{s.symbol}</p>
-                    <p className="text-[10px] text-text-disabled truncate max-w-[100px]">{s.name}</p>
+                    <p className="text-[10px] text-gray-500 dark:text-zinc-400 font-medium truncate max-w-[100px]">{s.name}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-mono-num text-text-primary">{s.price}</p>
@@ -164,19 +164,19 @@ export const BloombergDashboard = ({ onNavigate, onAnalyze }: DashboardProps) =>
           </motion.div>
 
           {/* Top Losers */}
-          <motion.div variants={child} className="rounded-xl border border-border bg-bg-card overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-border flex items-center gap-2">
+          <motion.div variants={child} className="rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-gray-200 dark:border-white/5 flex items-center gap-2">
               <TrendingDown className="h-4 w-4 text-danger" strokeWidth={1.5} />
               <h3 className="text-sm font-semibold text-text-primary">Top Losers</h3>
             </div>
-            <div className="divide-y divide-border/50">
+            <div className="divide-y border-gray-200 dark:border-white/5">
               {topLosers.map(s => (
                 <button key={s.symbol}
                   className="w-full flex items-center justify-between px-5 py-2.5 hover:bg-bg-hover transition-colors group"
                   onClick={() => { if (onNavigate) onNavigate('Analysis'); }}>
                   <div className="text-left">
                     <p className="text-sm font-medium text-text-primary group-hover:text-accent transition-colors">{s.symbol}</p>
-                    <p className="text-[10px] text-text-disabled truncate max-w-[100px]">{s.name}</p>
+                    <p className="text-[10px] text-gray-500 dark:text-zinc-400 font-medium truncate max-w-[100px]">{s.name}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-mono-num text-text-primary">{s.price}</p>
@@ -194,13 +194,13 @@ export const BloombergDashboard = ({ onNavigate, onAnalyze }: DashboardProps) =>
       {/* ═══ NEWS FEED ═══ */}
       <motion.div variants={child}>
         <div className="flex items-center gap-2 mb-3">
-          <Newspaper className="h-4 w-4 text-text-disabled" strokeWidth={1.5} />
+          <Newspaper className="h-4 w-4 text-gray-500 dark:text-zinc-400" strokeWidth={1.5} />
           <h2 className="text-sm font-semibold text-text-primary">Latest Market News</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {newsItems.map((n, i) => (
             <motion.div key={i} variants={child}
-              className="rounded-xl border border-border bg-bg-card p-5 hover:bg-bg-elevated transition-all duration-200 cursor-pointer group">
+              className="rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none p-5 hover:bg-gray-50 dark:hover:bg-white/5 transition-all duration-200 cursor-pointer group">
               <div className="flex items-start gap-3">
                 <div className={`shrink-0 h-8 w-8 rounded-lg flex items-center justify-center
                   ${n.sentiment === 'bullish' ? 'bg-success/10' : n.sentiment === 'bearish' ? 'bg-danger/10' : 'bg-bg-elevated'}`}>
@@ -213,9 +213,9 @@ export const BloombergDashboard = ({ onNavigate, onAnalyze }: DashboardProps) =>
                     {n.headline}
                   </p>
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-[10px] text-text-disabled font-medium">{n.source}</span>
-                    <span className="text-text-disabled">·</span>
-                    <span className="text-[10px] text-text-disabled flex items-center gap-0.5">
+                    <span className="text-[10px] text-gray-500 dark:text-zinc-400 font-medium">{n.source}</span>
+                    <span className="text-gray-500 dark:text-zinc-400">·</span>
+                    <span className="text-[10px] text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-0.5">
                       <Clock className="h-2.5 w-2.5" strokeWidth={1.5} /> {n.time}
                     </span>
                     <span className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full
@@ -247,6 +247,7 @@ function MiniSparkline({ positive }: { positive: boolean }) {
     <div className="h-6 w-full mt-2" aria-hidden="true">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={pts}>
+          <XAxis dataKey="i" hide padding={{ left: 0, right: 0 }} />
           <Line type="monotone" dataKey="v" stroke={color} strokeWidth={1.2} dot={false} />
         </LineChart>
       </ResponsiveContainer>

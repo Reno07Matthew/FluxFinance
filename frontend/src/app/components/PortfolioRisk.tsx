@@ -17,9 +17,9 @@ export const PortfolioRisk = ({ riskScore = 65, isHighRisk = false, onExecuteReb
     : { label: 'Low', cls: 'text-success' };
 
   return (
-    <div className="rounded-xl border border-border bg-bg-card p-5">
+    <div className="rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none p-5">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider flex items-center gap-1.5">
+        <h3 className="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
           {isHighRisk && (
             <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity }}>
               <ShieldAlert className="h-3.5 w-3.5 text-danger" strokeWidth={1.5} aria-hidden="true" />
@@ -29,11 +29,11 @@ export const PortfolioRisk = ({ riskScore = 65, isHighRisk = false, onExecuteReb
         </h3>
         <span className={`text-sm font-bold font-mono-num ${risk.cls}`}>{riskScore}/100</span>
       </div>
-      <p className="text-xs text-text-disabled mb-4">Portfolio exposure analysis</p>
+      <p className="text-xs text-gray-500 dark:text-zinc-400 mb-4">Portfolio exposure analysis</p>
 
       {/* Risk Bar */}
       <div>
-        <div className="flex justify-between text-[10px] font-semibold uppercase tracking-wider text-text-disabled mb-1.5">
+        <div className="flex justify-between text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-1.5">
           <span>Low</span><span>Mod</span><span>High</span>
         </div>
         <div className="relative h-2 w-full rounded-full overflow-hidden bg-bg-elevated" role="progressbar"
@@ -51,9 +51,9 @@ export const PortfolioRisk = ({ riskScore = 65, isHighRisk = false, onExecuteReb
           <div className="flex items-center justify-center gap-1.5">
             <span className={`text-lg font-bold ${risk.cls}`}>{risk.label}</span>
             <button onMouseEnter={() => setShowTip(true)} onMouseLeave={() => setShowTip(false)}
-              className="p-1 rounded-lg hover:bg-bg-hover transition-colors text-text-disabled hover:text-accent"
+              className="p-1 rounded-lg hover:bg-bg-hover transition-colors text-zinc-400 hover:text-accent"
               aria-label="Risk explanation">
-              <Info className="h-3.5 w-3.5" strokeWidth={1.5} />
+              <Info className="h-3.5 w-3.5 text-zinc-400" strokeWidth={1.5} />
               <AnimatePresence>
                 {showTip && (
                   <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}
@@ -62,7 +62,7 @@ export const PortfolioRisk = ({ riskScore = 65, isHighRisk = false, onExecuteReb
                       Score of <span className={`font-bold ${risk.cls}`}>{riskScore}/100</span> based on concentration,
                       correlation, and momentum indicators across your holdings.
                     </p>
-                    <div className="mt-2 pt-2 border-t border-border text-[10px] text-text-disabled font-mono-num flex items-center gap-3">
+                    <div className="mt-2 pt-2 border-t border-gray-200 dark:border-white/5 text-[10px] text-gray-500 dark:text-zinc-400 font-mono-num flex items-center gap-3">
                       <span>Beta: 1.2</span><span>Sharpe: 1.8</span><span>Corr: 0.85</span>
                     </div>
                   </motion.div>
@@ -70,7 +70,7 @@ export const PortfolioRisk = ({ riskScore = 65, isHighRisk = false, onExecuteReb
               </AnimatePresence>
             </button>
           </div>
-          <p className="text-[10px] text-text-disabled mt-1 font-mono-num">Beta: 1.2 · Sharpe: 1.8</p>
+          <p className="text-[10px] text-gray-500 dark:text-zinc-400 mt-1 font-mono-num">Beta: 1.2 · Sharpe: 1.8</p>
         </div>
       </div>
 
@@ -82,12 +82,12 @@ export const PortfolioRisk = ({ riskScore = 65, isHighRisk = false, onExecuteReb
             <span className="text-[10px] font-bold text-danger bg-danger/10 px-1.5 py-0.5 rounded-full">Action</span>
           )}
         </h4>
-        <p className="text-[11px] text-text-tertiary leading-relaxed mb-3">
+        <p className="text-[11px] text-gray-500 dark:text-zinc-400 leading-relaxed mb-3">
           Consider rebalancing to reduce concentration risk and lower portfolio volatility.
         </p>
         <button onClick={onExecuteRebalance}
-          className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-xs font-bold text-bg-primary hover:bg-accent-muted transition-colors min-h-[44px]">
-          <Zap className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" /> Execute Rebalance
+          className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors min-h-[44px]">
+          <Zap className="h-3.5 w-3.5 text-zinc-300" strokeWidth={1.5} aria-hidden="true" /> Execute Rebalance
         </button>
       </div>
     </div>

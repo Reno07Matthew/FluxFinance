@@ -90,7 +90,7 @@ export const TechnicalChart = () => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                <XAxis dataKey="day" stroke="#64748b" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
+                <XAxis dataKey="day" stroke="#64748b" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} padding={{ left: 0, right: 0 }} />
                 <YAxis stroke="#64748b" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} domain={[minPrice, maxPrice]} tickFormatter={(val) => `${currency}${val.toLocaleString()}`} />
                 <Tooltip content={<CustomTooltip />} />
                 <Area type="monotone" dataKey="price" stroke="#06b6d4" strokeWidth={2} fillOpacity={1} fill="url(#colorPrice)" name={`Price (${currency})`} />
@@ -120,7 +120,7 @@ export const TechnicalChart = () => {
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-              <XAxis dataKey="day" hide />
+              <XAxis dataKey="day" hide padding={{ left: 0, right: 0 }} />
               <YAxis stroke="#64748b" tick={{ fontSize: 10 }} domain={[0, 100]} ticks={[0, 30, 50, 70, 100]} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomTooltip />} />
               <ReferenceLine y={70} stroke="#ef4444" strokeDasharray="3 3" />

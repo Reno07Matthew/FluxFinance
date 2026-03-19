@@ -185,17 +185,17 @@ export const Portfolio = () => {
           <p className="text-sm text-text-tertiary flex items-center gap-2 mt-0.5">
             AI-powered risk analysis
             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full">
-              <Database className="h-2.5 w-2.5" strokeWidth={1.5} aria-hidden="true" /> Cloud Synced
+              <Database className="h-2.5 w-2.5 text-success" strokeWidth={1.5} aria-hidden="true" /> Cloud Synced
             </span>
           </p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-bg-primary hover:bg-accent-muted transition-colors min-h-[44px]">
-            <Plus className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" /> Add Stock
+            className="flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-xs font-bold text-white hover:bg-accent-hover shadow-lg shadow-accent/20 transition-all min-h-[44px]">
+            <Plus className="h-3.5 w-3.5 text-white" strokeWidth={2} aria-hidden="true" /> Add Stock
           </button>
           <button onClick={fetchPrices} disabled={loading}
-            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-text-tertiary hover:text-text-primary hover:bg-bg-hover transition-colors disabled:opacity-50 min-h-[44px]"
+            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-zinc-400 hover:text-text-primary hover:bg-bg-hover transition-colors disabled:opacity-50 min-h-[44px]"
             aria-label="Refresh prices">
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} strokeWidth={1.5} aria-hidden="true" />
           </button>
@@ -203,8 +203,8 @@ export const Portfolio = () => {
       </div>
 
       {/* ═══ TOTAL VALUE CARD ═══ */}
-      <div className="rounded-xl border border-border bg-bg-card p-6">
-        <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2">Total Portfolio Value</p>
+      <div className="rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none p-6">
+        <p className="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-2">Total Portfolio Value</p>
         <div className="flex items-baseline gap-4 flex-wrap">
           <span className="text-3xl font-bold font-mono-num text-text-primary" aria-live="polite">
             {loading ? '…' : `${cs}${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
@@ -218,7 +218,7 @@ export const Portfolio = () => {
             </span>
           )}
         </div>
-        <p className="text-xs text-text-disabled mt-1.5">
+        <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1.5">
           Invested: {fmtCur(totalInvested, displayCur)} · {holdings.length} assets
         </p>
       </div>
@@ -238,36 +238,39 @@ export const Portfolio = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:h-[calc(100vh-270px)] min-h-[600px]">
 
         {/* ── Holdings Table (Left 2/3) ── */}
-        <div className="lg:col-span-2 rounded-xl border border-border bg-bg-card overflow-hidden flex flex-col h-full">
+        <div className="lg:col-span-2 rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none overflow-hidden flex flex-col h-full">
           <div className="border-b border-border px-5 py-3 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-sans font-semibold text-text-primary">Your Holdings</h2>
               <span className="inline-flex items-center gap-1 text-[10px] font-bold text-accent bg-accent/10 px-2 py-0.5 rounded-full">
-                <Zap className="h-2.5 w-2.5" strokeWidth={1.5} aria-hidden="true" /> Live
+                <Zap className="h-2.5 w-2.5 text-accent" strokeWidth={1.5} aria-hidden="true" /> Live
               </span>
             </div>
-            <span className="text-[10px] text-text-disabled">{holdings.length} asset{holdings.length !== 1 ? 's' : ''}</span>
+            <span className="text-[10px] text-gray-500 dark:text-zinc-400 font-medium">{holdings.length} asset{holdings.length !== 1 ? 's' : ''}</span>
           </div>
 
           {holdings.length === 0 ? (
             <div className="p-12 text-center">
-              <p className="text-sm text-text-disabled mb-4">No holdings yet. Add your first stock!</p>
+              <p className="text-sm text-zinc-400 mb-4 flex items-center justify-center gap-2">
+                <Shield className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
+                No holdings yet. Add your first stock!
+              </p>
               <button onClick={() => setShowAddModal(true)}
-                className="inline-flex items-center gap-2 rounded-lg bg-accent/10 text-accent px-4 py-2 text-xs font-medium hover:bg-accent/20 transition-colors min-h-[44px]">
-                <Plus className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" /> Add Stock
+                className="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-xs font-bold text-white hover:bg-accent-hover shadow-lg shadow-accent/20 transition-all min-h-[44px]">
+                <Plus className="h-4 w-4 text-white" strokeWidth={2} aria-hidden="true" /> Add Stock
               </button>
             </div>
           ) : (
             <div className="overflow-x-auto flex-1 h-full min-h-0">
               <table className="w-full" role="table" aria-label="Portfolio holdings">
-                <thead className="border-b border-border/50">
+                <thead className="border-b border-gray-200 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02]">
                   <tr>
-                    <th className="px-5 py-2.5 text-xs font-semibold text-text-tertiary uppercase tracking-wider text-left">Asset</th>
-                    <th className="px-5 py-2.5 text-xs font-semibold text-text-tertiary uppercase tracking-wider text-right">Qty</th>
-                    <th className="px-5 py-2.5 text-xs font-semibold text-text-tertiary uppercase tracking-wider text-right">Price</th>
-                    <th className="px-5 py-2.5 text-xs font-semibold text-text-tertiary uppercase tracking-wider text-right">Value</th>
-                    <th className="px-5 py-2.5 text-xs font-semibold text-text-tertiary uppercase tracking-wider text-right">P/L</th>
-                    <th className="px-5 py-2.5 text-xs font-semibold text-text-tertiary uppercase tracking-wider text-center">Verdict</th>
+                    <th className="px-5 py-2.5 text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider text-left">Asset</th>
+                    <th className="px-5 py-2.5 text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider text-right">Qty</th>
+                    <th className="px-5 py-2.5 text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider text-right">Price</th>
+                    <th className="px-5 py-2.5 text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider text-right">Value</th>
+                    <th className="px-5 py-2.5 text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider text-right">P/L</th>
+                    <th className="px-5 py-2.5 text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider text-center">Verdict</th>
                     <th className="px-5 py-2.5" />
                   </tr>
                 </thead>
@@ -281,7 +284,7 @@ export const Portfolio = () => {
                             aria-hidden="true">{item.symbol.slice(0, 2)}</div>
                           <div>
                             <p className="text-sm font-medium text-text-primary">{item.name}</p>
-                            <p className="text-[10px] text-text-disabled">{item.symbol}</p>
+                            <p className="text-[10px] text-zinc-400">{item.symbol}</p>
                           </div>
                         </div>
                       </td>
@@ -333,9 +336,9 @@ export const Portfolio = () => {
 
           {/* Portfolio Allocation */}
           {liveHoldings.length > 0 && (
-            <div className="rounded-xl border border-border bg-bg-card p-5">
-              <h3 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                <PieChart className="h-3.5 w-3.5 text-accent-muted" strokeWidth={1.5} aria-hidden="true" />
+            <div className="rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none p-5">
+              <h3 className="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <PieChart className="h-3.5 w-3.5 text-zinc-400" strokeWidth={1.5} aria-hidden="true" />
                 Allocation
               </h3>
               <div className="space-y-2">
@@ -359,9 +362,9 @@ export const Portfolio = () => {
 
           {/* AI Insights */}
           {liveHoldings.length > 0 && (
-            <div className="rounded-xl border border-border bg-bg-card p-5">
-              <h3 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                <Zap className="h-3.5 w-3.5 text-warning" strokeWidth={1.5} aria-hidden="true" />
+            <div className="rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none p-5">
+              <h3 className="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <Zap className="h-3.5 w-3.5 text-zinc-400" strokeWidth={1.5} aria-hidden="true" />
                 AI Insights
               </h3>
               <div className="space-y-2">
@@ -401,10 +404,10 @@ function MetricCard({ icon, label, value, valueClass }: {
   icon: React.ReactNode; label: string; value: string; valueClass?: string;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-bg-card p-4">
+    <div className="rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none p-4">
       <div className="flex items-center gap-2 mb-2">
         {icon}
-        <span className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider">{label}</span>
+        <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">{label}</span>
       </div>
       <p className={`text-lg font-bold font-mono-num ${valueClass || 'text-text-primary'}`}>{value}</p>
     </div>
@@ -416,13 +419,13 @@ function RebalanceModal({ liveHoldings, totalValue, onClose }: {
 }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="w-full max-w-lg mx-4 rounded-xl border border-border bg-bg-card p-6" onClick={e => e.stopPropagation()}>
+        className="w-full max-w-lg mx-4 rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-xl dark:shadow-none p-6" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <div>
             <h3 className="text-lg font-sans font-semibold text-text-primary">AI Rebalance Preview</h3>
-            <p className="text-xs text-text-tertiary mt-0.5">Equal-weight allocation to reduce concentration risk</p>
+            <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">Equal-weight allocation to reduce concentration risk</p>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-bg-hover text-text-disabled hover:text-text-primary transition-colors min-h-[44px]" aria-label="Close">
             <X className="h-4 w-4" strokeWidth={1.5} />
@@ -430,11 +433,11 @@ function RebalanceModal({ liveHoldings, totalValue, onClose }: {
         </div>
         <div className="grid grid-cols-2 gap-3 mb-5">
           <div className="rounded-lg border border-border bg-bg-primary p-4">
-            <p className="text-[10px] uppercase tracking-wider text-text-disabled font-bold mb-2">Current</p>
+            <p className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold mb-2">Current</p>
             <div className="space-y-2">
               {liveHoldings.map(h => (
                 <div key={h.symbol} className="flex justify-between text-xs">
-                  <span className="text-text-tertiary">{h.symbol}</span>
+                  <span className="text-zinc-400">{h.symbol}</span>
                   <span className="text-text-primary font-mono-num font-semibold">
                     {((h.totalValue / (totalValue || 1)) * 100).toFixed(1)}%
                   </span>
@@ -447,7 +450,7 @@ function RebalanceModal({ liveHoldings, totalValue, onClose }: {
             <div className="space-y-2">
               {liveHoldings.map(h => (
                 <div key={h.symbol} className="flex justify-between text-xs">
-                  <span className="text-text-tertiary">{h.symbol}</span>
+                  <span className="text-zinc-400">{h.symbol}</span>
                   <span className="text-success font-mono-num font-semibold">
                     {(100 / liveHoldings.length).toFixed(1)}%
                   </span>
@@ -457,9 +460,9 @@ function RebalanceModal({ liveHoldings, totalValue, onClose }: {
           </div>
         </div>
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 rounded-lg border border-border px-4 py-2.5 text-xs font-medium text-text-tertiary hover:bg-bg-hover transition-colors min-h-[44px]">Cancel</button>
-          <button onClick={onClose} className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-xs font-bold text-bg-primary hover:bg-accent-muted transition-colors min-h-[44px]">
-            <Shield className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" /> Confirm
+          <button onClick={onClose} className="flex-1 rounded-lg border border-border px-4 py-2.5 text-xs font-medium text-gray-500 dark:text-zinc-400 hover:bg-bg-hover transition-colors min-h-[44px]">Cancel</button>
+          <button onClick={onClose} className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-xs font-bold text-white hover:bg-accent-hover transition-colors min-h-[44px]">
+            <Shield className="h-3.5 w-3.5 text-white" strokeWidth={1.5} aria-hidden="true" /> Confirm
           </button>
         </div>
       </motion.div>
@@ -524,25 +527,25 @@ function AddStockModal({ onClose, onAdd }: { onClose: () => void; onAdd: (h: Hol
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="w-full max-w-md mx-4 rounded-xl border border-border bg-bg-card p-6" onClick={e => e.stopPropagation()}>
+        className="w-full max-w-md mx-4 rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-xl dark:shadow-none p-6" onClick={e => e.stopPropagation()}>
 
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-lg font-sans font-semibold text-text-primary">Add to Portfolio</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-bg-hover text-text-disabled hover:text-text-primary transition-colors min-h-[44px]" aria-label="Close">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-bg-hover text-zinc-400 hover:text-text-primary transition-colors min-h-[44px]" aria-label="Close">
             <X className="h-4 w-4" strokeWidth={1.5} />
           </button>
         </div>
 
         {/* Search */}
         <div className="mb-4">
-          <label className="text-[10px] font-semibold uppercase tracking-wider text-text-disabled mb-2 block">Search Stock or Crypto</label>
+          <label className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-2 block">Search Stock or Crypto</label>
           {selectedAsset ? (
             <div className="flex items-center justify-between rounded-lg border border-accent/30 bg-accent/5 p-3">
               <div>
                 <p className="text-sm font-semibold text-text-primary">{selectedAsset.symbol}</p>
-                <p className="text-[10px] text-text-tertiary">{selectedAsset.name} · {selectedAsset.exchange}</p>
+                <p className="text-[10px] text-zinc-400">{selectedAsset.name} · {selectedAsset.exchange}</p>
               </div>
               <button onClick={() => { setSelectedAsset(null); setMarketPrice(null); }} className="text-text-disabled hover:text-danger transition-colors min-h-[44px]" aria-label="Clear selection">
                 <X className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -550,21 +553,21 @@ function AddStockModal({ onClose, onAdd }: { onClose: () => void; onAdd: (h: Hol
             </div>
           ) : (
             <div className="relative" ref={dropdownRef}>
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-disabled" strokeWidth={1.5} aria-hidden="true" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" strokeWidth={1.5} aria-hidden="true" />
               <input type="text" placeholder="Search Reliance, Bitcoin, TCS…"
                 value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                className="w-full h-9 rounded-lg border border-border bg-bg-primary pl-8 pr-4 text-sm text-text-primary placeholder:text-text-disabled focus:border-accent focus:outline-none transition-colors"
+                className="w-full h-9 rounded-lg border border-border bg-bg-primary pl-8 pr-4 text-sm text-text-primary placeholder:text-zinc-400 focus:border-accent focus:outline-none transition-colors"
                 aria-label="Search for assets" />
               {showDropdown && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-border bg-bg-card shadow-xl z-50">
+                <div className="absolute top-full left-0 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-gray-200 dark:border-white/5 bg-white dark:bg-bg-card shadow-xl z-50">
                   {suggestions.map(s => (
                     <button key={s.symbol} onClick={() => selectAsset(s)}
                       className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-bg-hover transition-colors min-h-[44px]">
                       <div>
                         <span className="text-sm font-semibold text-text-primary">{s.symbol}</span>
-                        <span className="text-xs text-text-disabled ml-2">{s.name}</span>
+                        <span className="text-xs text-zinc-400 ml-2">{s.name}</span>
                       </div>
-                      <span className="text-[10px] font-medium text-text-disabled px-2 py-0.5 rounded-full bg-bg-elevated">{s.exchange}</span>
+                      <span className="text-[10px] font-medium text-zinc-400 px-2 py-0.5 rounded-full bg-bg-elevated">{s.exchange}</span>
                     </button>
                   ))}
                 </div>
@@ -575,13 +578,13 @@ function AddStockModal({ onClose, onAdd }: { onClose: () => void; onAdd: (h: Hol
 
         {/* Market Price */}
         {selectedAsset && (
-          <div className="mb-4 rounded-lg border border-border bg-bg-primary p-3">
+          <div className="mb-4 rounded-lg border border-gray-200 dark:border-white/5 bg-gray-50/50 dark:bg-bg-primary p-3">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase tracking-wider text-text-disabled font-semibold">Market Price</span>
+              <span className="text-[10px] uppercase tracking-wider text-gray-500 dark:text-zinc-400 font-medium">Market Price</span>
               {fetchingPrice ? (
                 <span className="flex items-center gap-1 text-[10px] text-accent"><RefreshCw className="h-2.5 w-2.5 animate-spin" strokeWidth={1.5} /> Fetching…</span>
               ) : marketPrice ? (
-                <span className="flex items-center gap-1 text-[10px] text-success font-bold"><Zap className="h-2.5 w-2.5" strokeWidth={1.5} /> Live</span>
+                <span className="flex items-center gap-1 text-[10px] text-success font-bold"><Zap className="h-2.5 w-2.5 text-success" strokeWidth={1.5} /> Live</span>
               ) : (
                 <span className="text-[10px] text-danger">Unavailable</span>
               )}
@@ -594,7 +597,7 @@ function AddStockModal({ onClose, onAdd }: { onClose: () => void; onAdd: (h: Hol
 
         {/* Quantity */}
         <div className="mb-4">
-          <label className="text-[10px] font-semibold uppercase tracking-wider text-text-disabled mb-2 block">Quantity</label>
+          <label className="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-2 block">Quantity</label>
           <input type="number" placeholder="e.g. 50" value={quantity} onChange={e => setQuantity(e.target.value)}
             className="w-full h-9 rounded-lg border border-border bg-bg-primary px-4 text-sm text-text-primary placeholder:text-text-disabled focus:border-accent focus:outline-none transition-colors"
             aria-label="Number of shares" />
@@ -602,18 +605,18 @@ function AddStockModal({ onClose, onAdd }: { onClose: () => void; onAdd: (h: Hol
 
         {/* Total */}
         {marketPrice && qty > 0 && (
-          <div className="mb-5 rounded-lg border border-border bg-bg-elevated/50 p-3">
-            <p className="text-[10px] uppercase tracking-wider text-text-disabled font-semibold">Total Investment</p>
+          <div className="mb-5 rounded-lg border border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-bg-elevated/50 p-3">
+            <p className="text-[10px] uppercase tracking-wider text-gray-500 dark:text-zinc-400 font-medium">Total Investment</p>
             <p className="text-lg font-bold font-mono-num text-text-primary mt-0.5">
               {cs}{totalInvestment.toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </p>
-            <p className="text-[10px] text-text-disabled mt-0.5">{qty} × {cs}{marketPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+            <p className="text-[10px] text-gray-500 dark:text-zinc-400 mt-0.5">{qty} × {cs}{marketPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
           </div>
         )}
 
         <button onClick={handleSubmit}
           disabled={!selectedAsset || !quantity || !marketPrice || submitting || fetchingPrice}
-          className="w-full flex items-center justify-center gap-2 rounded-lg bg-white text-black px-4 py-2.5 text-xs font-semibold hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]">
+          className="w-full flex items-center justify-center gap-2 rounded-lg bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]">
           {submitting ? (<><RefreshCw className="h-3.5 w-3.5 animate-spin" strokeWidth={1.5} /> Saving…</>) : (<><Plus className="h-3.5 w-3.5" strokeWidth={1.5} /> Add to Portfolio</>)}
         </button>
       </motion.div>

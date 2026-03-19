@@ -33,11 +33,11 @@ def search(q: str = ""):
     results = search_symbols(q)
     return {"results": results}
 
-@app.get("/markets")
-def markets(category: str = "stock"):
-    """Get batch market data for stocks or crypto."""
-    data = get_batch_market_data(category)
-    return {"assets": data}
+@app.get("/market-news")
+def market_news():
+    """Get global breaking market news."""
+    from data_provider import get_global_market_news
+    return {"headlines": get_global_market_news()}
 
 @app.get("/portfolio/prices")
 def portfolio_prices(symbols: str = ""):

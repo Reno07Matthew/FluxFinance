@@ -109,49 +109,11 @@ SEARCHABLE_ASSETS = {
     'TRENT': {'name': 'Trent (Westside)', 'type': 'stock', 'exchange': 'NSE'},
     'IRCTC': {'name': 'IRCTC', 'type': 'stock', 'exchange': 'NSE'},
     'HAL': {'name': 'Hindustan Aeronautics', 'type': 'stock', 'exchange': 'NSE'},
-    # US Stocks
-    'AAPL': {'name': 'Apple', 'type': 'stock', 'exchange': 'NASDAQ'},
-    'MSFT': {'name': 'Microsoft', 'type': 'stock', 'exchange': 'NASDAQ'},
-    'GOOGL': {'name': 'Alphabet (Google)', 'type': 'stock', 'exchange': 'NASDAQ'},
-    'AMZN': {'name': 'Amazon', 'type': 'stock', 'exchange': 'NASDAQ'},
-    'TSLA': {'name': 'Tesla', 'type': 'stock', 'exchange': 'NASDAQ'},
-    'META': {'name': 'Meta (Facebook)', 'type': 'stock', 'exchange': 'NASDAQ'},
-    'NVDA': {'name': 'NVIDIA', 'type': 'stock', 'exchange': 'NASDAQ'},
-    'AMD': {'name': 'Advanced Micro Devices', 'type': 'stock', 'exchange': 'NASDAQ'},
-    'NFLX': {'name': 'Netflix', 'type': 'stock', 'exchange': 'NASDAQ'},
-    'UBER': {'name': 'Uber Technologies', 'type': 'stock', 'exchange': 'NYSE'},
-    'DIS': {'name': 'Walt Disney', 'type': 'stock', 'exchange': 'NYSE'},
-    'JPM': {'name': 'JPMorgan Chase', 'type': 'stock', 'exchange': 'NYSE'},
-    'V': {'name': 'Visa', 'type': 'stock', 'exchange': 'NYSE'},
-    'MA': {'name': 'Mastercard', 'type': 'stock', 'exchange': 'NYSE'},
-    'WMT': {'name': 'Walmart', 'type': 'stock', 'exchange': 'NYSE'},
-    'KO': {'name': 'Coca-Cola', 'type': 'stock', 'exchange': 'NYSE'},
-    'PEP': {'name': 'PepsiCo', 'type': 'stock', 'exchange': 'NASDAQ'},
-    'BA': {'name': 'Boeing', 'type': 'stock', 'exchange': 'NYSE'},
-    'INTC': {'name': 'Intel', 'type': 'stock', 'exchange': 'NASDAQ'},
     # Indices
     'NIFTY': {'name': 'Nifty 50 Index', 'type': 'stock', 'exchange': 'NSE'},
     'SENSEX': {'name': 'BSE Sensex Index', 'type': 'stock', 'exchange': 'BSE'},
     'BANKNIFTY': {'name': 'Bank Nifty Index', 'type': 'stock', 'exchange': 'NSE'},
-    'SP500': {'name': 'S&P 500 Index', 'type': 'stock', 'exchange': 'US'},
-    'NASDAQ': {'name': 'NASDAQ Composite', 'type': 'stock', 'exchange': 'US'},
-    'DOW': {'name': 'Dow Jones Industrial', 'type': 'stock', 'exchange': 'US'},
-    # Cryptocurrencies
-    'BTC': {'name': 'Bitcoin', 'type': 'crypto', 'exchange': 'Binance'},
-    'ETH': {'name': 'Ethereum', 'type': 'crypto', 'exchange': 'Binance'},
-    'BNB': {'name': 'Binance Coin', 'type': 'crypto', 'exchange': 'Binance'},
-    'SOL': {'name': 'Solana', 'type': 'crypto', 'exchange': 'Binance'},
-    'XRP': {'name': 'Ripple', 'type': 'crypto', 'exchange': 'Binance'},
-    'ADA': {'name': 'Cardano', 'type': 'crypto', 'exchange': 'Binance'},
-    'DOGE': {'name': 'Dogecoin', 'type': 'crypto', 'exchange': 'Binance'},
-    'DOT': {'name': 'Polkadot', 'type': 'crypto', 'exchange': 'Binance'},
-    'AVAX': {'name': 'Avalanche', 'type': 'crypto', 'exchange': 'Binance'},
-    'MATIC': {'name': 'Polygon', 'type': 'crypto', 'exchange': 'Binance'},
-    'LINK': {'name': 'Chainlink', 'type': 'crypto', 'exchange': 'Binance'},
-    'SHIB': {'name': 'Shiba Inu', 'type': 'crypto', 'exchange': 'Binance'},
-    'LTC': {'name': 'Litecoin', 'type': 'crypto', 'exchange': 'Binance'},
-    'UNI': {'name': 'Uniswap', 'type': 'crypto', 'exchange': 'Binance'},
-    'ATOM': {'name': 'Cosmos', 'type': 'crypto', 'exchange': 'Binance'},
+    'NIFTYIT': {'name': 'Nifty IT Index', 'type': 'stock', 'exchange': 'NSE'},
 }
 
 # Build COMPANY_NAMES from SEARCHABLE_ASSETS for backward compat with news search
@@ -206,11 +168,11 @@ def _google_news_fallback(ticker: str, is_indian: bool) -> list:
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
     company_name = COMPANY_NAMES.get(ticker.upper(), ticker)
 
-    if is_indian:
-        # Two targeted queries for Indian stocks
+    if True: # Always Indian focus
+        # Targeted queries for Indian stocks
         queries = [
-            f"{company_name} NSE stock",           # e.g. "Reliance Industries NSE stock"
-            f"{ticker} share price India",          # e.g. "RELIANCE share price India"
+            f"{company_name} NSE stock",
+            f"{ticker} share price India",
         ]
         locale = "&hl=en-IN&gl=IN&ceid=IN:en"
     else:
@@ -410,16 +372,15 @@ def get_market_data(symbol, asset_type="stock"):
         return {"error": str(e)}
 
 
-# Default stock and crypto lists for Markets page (Indian focus)
+# Default stock and index lists for Markets page (Indian focus)
 STOCK_LIST = ['RELIANCE', 'TCS', 'INFY', 'HDFCBANK', 'ICICIBANK', 'SBIN', 'ITC', 'WIPRO',
               'TATAMOTORS', 'BHARTIARTL', 'KOTAKBANK', 'LT', 'AXISBANK', 'ASIANPAINT',
               'MARUTI', 'TITAN', 'SUNPHARMA', 'BAJFINANCE', 'HCLTECH', 'ADANIENT',
               'ZOMATO', 'IRCTC', 'HAL', 'COALINDIA', 'NTPC', 'ONGC', 'BPCL']
 
-CRYPTO_LIST = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT', 'AVAX', 'MATIC',
-               'LINK', 'SHIB', 'LTC', 'UNI', 'ATOM']
+INDEX_LIST = ['NIFTY', 'SENSEX', 'BANKNIFTY', 'NIFTYIT']
+CRYPTO_LIST = [] # Disabled
 
-INDEX_LIST = ['NIFTY', 'SENSEX', 'BANKNIFTY']
 
 
 def get_batch_market_data(category="stock"):
@@ -490,3 +451,48 @@ def get_batch_market_data(category="stock"):
         print(f"Batch fetch error: {e}")
     
     return results
+
+def get_global_market_news() -> list:
+    """
+    Fetch breaking news affecting global markets.
+    Uses Alpha Vantage NEWS_SENTIMENT without a ticker for general financial news.
+    Falls back to Google News RSS with 'Global Market breaking news'.
+    """
+    if ALPHA_VANTAGE_KEY:
+        try:
+            # AV with no ticker = Top Market News
+            av_url = f"https://www.alphavantage.co/query?function=NEWS_SENTIMENT&limit=10&apikey={ALPHA_VANTAGE_KEY}"
+            resp = requests.get(av_url, timeout=12, verify=False)
+            data = resp.json()
+            if "feed" in data and data["feed"]:
+                headlines = []
+                for article in data["feed"][:10]:
+                    headlines.append({
+                        "title": article.get("title", ""),
+                        "url": article.get("url", ""),
+                        "summary": article.get("summary", ""),
+                        "av_sentiment_score": round(float(article.get("overall_sentiment_score", 0)), 4)
+                    })
+                return headlines
+        except Exception as e:
+            print(f"[AV-GlobalNews] Error: {e}")
+
+    # Fallback to Google News
+    headers = {"User-Agent": "Mozilla/5.0"}
+    query = "Global Stock Market breaking news"
+    import urllib.parse
+    q_enc = urllib.parse.quote(query)
+    rss_url = f"https://news.google.com/rss/search?q={q_enc}&hl=en-US&gl=US&ceid=US:en"
+    try:
+        response = requests.get(rss_url, headers=headers, timeout=10, verify=False)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        headlines = []
+        for item in soup.find_all('item')[:10]:
+            title = item.find('title').get_text()
+            if ' - ' in title: title = title.rsplit(' - ', 1)[0]
+            link = item.find('link').get_text()
+            headlines.append({"title": title, "url": link})
+        return headlines
+    except Exception as e:
+        print(f"[GoogleNews-Global] Error: {e}")
+        return []

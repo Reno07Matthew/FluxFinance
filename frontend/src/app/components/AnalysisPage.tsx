@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
     ComposedChart, Area, Bar, CartesianGrid,
@@ -59,7 +59,26 @@ export const AnalysisPage = () => {
     const { data, symbol, assetType } = useMarket();
     const live = useLivePrice(symbol, assetType);
     const { theme } = useTheme();
-    const [newsOpen, setNewsOpen] = useState(false);
+    const [newsOpen, setNewsOpen] = useState(true);
+    const [newsTab, setNewsTab] = useState<'asset' | 'global'>('asset');
+    const [globalNews, setGlobalNews] = useState<{ title: string; url: string; av_sentiment_score?: number }[]>([]);
+    const [loadingGlobal, setLoadingGlobal] = useState(false);
+
+    useEffect(() => {
+        const fetchGlobal = async () => {
+            setLoadingGlobal(true);
+            try {
+                const { getGlobalMarketNews } = await import('@/services/api');
+                const news = await getGlobalMarketNews();
+                setGlobalNews(news);
+            } catch (err) {
+                console.error("Failed to fetch global news", err);
+            } finally {
+                setLoadingGlobal(false);
+            }
+        };
+        fetchGlobal();
+    }, []);
     const isDark = theme === 'dark';
 
     if (!data) return (
@@ -133,11 +152,11 @@ export const AnalysisPage = () => {
             className="space-y-4 max-w-none"
         >
             {/* ── Header ── */}
-            <motion.div variants={childVariants} className="rounded-xl border border-border bg-bg-card p-5">
+            <motion.div variants={childVariants} className="rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold text-text-tertiary uppercase tracking-widest">{data.symbol}</span>
+                            <span className="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-widest">{data.symbol}</span>
                             {live?.isConnected && (
                                 <span className="flex items-center gap-1 text-[10px] text-success" aria-label="Live price connected">
                                     <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
@@ -162,11 +181,11 @@ export const AnalysisPage = () => {
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="text-right">
-                            <p className="text-[10px] text-text-disabled uppercase tracking-wider font-medium mb-1">Flux Verdict</p>
+                            <p className="text-[10px] text-gray-500 dark:text-zinc-400 uppercase tracking-wider font-medium mb-1">Flux Verdict</p>
                             <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${vClass}`}>{vBadge}</span>
                         </div>
                         <div className="text-right">
-                            <p className="text-[10px] text-text-disabled uppercase tracking-wider font-medium mb-1">Health Score</p>
+                            <p className="text-[10px] text-gray-500 dark:text-zinc-400 uppercase tracking-wider font-medium mb-1">Health Score</p>
                             <span className={`text-sm font-bold font-mono-num
                                 ${fluxScore >= 72 ? 'text-success' : fluxScore <= 35 ? 'text-danger' : 'text-warning'}`}>
                                 {fluxScore}/100
@@ -177,15 +196,15 @@ export const AnalysisPage = () => {
             </motion.div>
 
             {/* ── 2/3 + 1/3 Grid ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-auto lg:h-[calc(100vh-220px)] min-h-[600px]">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 min-h-[600px]">
 
                 {/* LEFT */}
-                <div className="lg:col-span-2 flex flex-col gap-4 h-full">
+                <div className="lg:col-span-2 flex flex-col gap-4">
                     {/* Chart */}
-                    <div className="rounded-xl border border-border bg-bg-card p-5 flex-1 flex flex-col min-h-[300px]">
+                    <div className="rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none p-5 flex-1 flex flex-col min-h-[300px]">
                         <div className="flex items-center justify-between mb-3 shrink-0">
                             <h2 className="text-sm font-sans font-semibold text-text-primary">{data.symbol} — 30d Price</h2>
-                            <span className="text-[10px] text-text-disabled uppercase tracking-wider">30D</span>
+                            <span className="text-[10px] text-gray-500 dark:text-zinc-400 font-medium uppercase tracking-wider">30D</span>
                         </div>
                         <div className="flex-1 min-h-[200px]" role="img" aria-label={`${data.symbol} 30-day price chart`}>
                             {chartData.length > 0 ? (
@@ -198,7 +217,7 @@ export const AnalysisPage = () => {
                                             </linearGradient>
                                         </defs>
                                         <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.05} vertical={false} />
-                                        <XAxis dataKey="d" hide />
+                                        <XAxis dataKey="d" hide padding={{ left: 0, right: 0 }} />
                                         <YAxis yAxisId="price" domain={[minP, maxP]} hide />
                                         <YAxis yAxisId="volume" domain={[0, 'dataMax * 5']} hide />
                                         <Tooltip
@@ -222,20 +241,20 @@ export const AnalysisPage = () => {
                     </div>
 
                     {/* Indicator Table */}
-                    <div className="rounded-xl border border-border bg-bg-card shrink-0">
-                        <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+                    <div className="rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none shrink-0 overflow-hidden">
+                        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-white/5">
                             <h2 className="text-sm font-sans font-semibold text-text-primary flex items-center gap-2">
                                 <Zap className="h-4 w-4 text-accent-muted" strokeWidth={1.5} aria-hidden="true" />
                                 Technical Indicators
                             </h2>
-                            <span className="text-[10px] text-text-disabled">7 Signals</span>
+                            <span className="text-[10px] text-gray-500 dark:text-zinc-400 font-medium">7 Signals</span>
                         </div>
                         <table className="w-full" role="table" aria-label="Technical indicators">
-                            <thead>
-                                <tr className="border-b border-border/50">
-                                    <th className="text-left px-5 py-2.5 text-xs font-semibold text-text-tertiary uppercase tracking-wider">Indicator</th>
-                                    <th className="text-right px-5 py-2.5 text-xs font-semibold text-text-tertiary uppercase tracking-wider">Value</th>
-                                    <th className="text-center px-5 py-2.5 text-xs font-semibold text-text-tertiary uppercase tracking-wider">Signal</th>
+                            <thead className="bg-gray-50/50 dark:bg-white/[0.02]">
+                                <tr className="border-b border-gray-200 dark:border-white/5">
+                                    <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Indicator</th>
+                                    <th className="text-right px-5 py-2.5 text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Value</th>
+                                    <th className="text-center px-5 py-2.5 text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">Signal</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border/30">
@@ -251,16 +270,118 @@ export const AnalysisPage = () => {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* ── Collapsible News ── */}
+                    <div className="rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none">
+                    <div className="flex items-center gap-4 px-5 border-b border-gray-200 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01]">
+                        <button
+                            onClick={() => setNewsTab('asset')}
+                            className={`py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${newsTab === 'asset' ? 'text-accent border-accent' : 'text-gray-400 border-transparent hover:text-gray-600'}`}
+                        >
+                            Asset Headlines
+                        </button>
+                        <button
+                            onClick={() => setNewsTab('global')}
+                            className={`py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${newsTab === 'global' ? 'text-accent border-accent' : 'text-gray-400 border-transparent hover:text-gray-600'}`}
+                        >
+                            Global Market Pulse
+                        </button>
+                        <div className="ml-auto flex items-center gap-2">
+                             <span className="text-[10px] text-gray-500 dark:text-zinc-400 font-medium whitespace-nowrap">
+                                ({newsTab === 'asset' ? (data?.headlines?.length ?? 0) : globalNews.length})
+                             </span>
+                             <button
+                                onClick={() => setNewsOpen(o => !o)}
+                                className="p-1.5 hover:bg-gray-200 dark:hover:bg-white/5 rounded-md transition-colors"
+                             >
+                                {newsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                             </button>
+                        </div>
+                    </div>
+
+                    <AnimatePresence>
+                        {newsOpen && (
+                            <motion.div
+                                id="news-panel"
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden"
+                            >
+                                <div className="p-4 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar space-y-3" role="feed">
+                                    {newsTab === 'global' && loadingGlobal && (
+                                        <div className="flex flex-col gap-3 py-4">
+                                            {[1,2,3].map(i => (
+                                                <div key={i} className="h-16 w-full animate-pulse bg-gray-100 dark:bg-white/5 rounded-lg" />
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {((newsTab === 'asset' ? (data?.headlines ?? []) : globalNews)).map((h: { title: string; url: string; av_sentiment_score?: number }, i: number) => {
+                                        const t = h.title.toLowerCase();
+                                        const bull = ['surge', 'jump', 'rise', 'gain', 'high', 'growth', 'rally', 'buy', 'positive', 'boost'].some(w => t.includes(w));
+                                        const bear = ['fall', 'drop', 'crash', 'low', 'loss', 'slide', 'slump', 'fear', 'negative', 'hit'].some(w => t.includes(w));
+                                        const avScore = (h as any).av_sentiment_score;
+                                        
+                                        const isBull = avScore !== undefined ? avScore > 0.15 : bull;
+                                        const isBear = avScore !== undefined ? avScore < -0.15 : bear;
+
+                                        const sigColor = isBull ? 'text-success bg-success/10 border-success/20' 
+                                                           : isBear ? 'text-danger bg-danger/10 border-danger/20' 
+                                                           : 'text-warning bg-warning/10 border-warning/20';
+                                        const sigLabel = isBull ? '↑ Bullish' : isBear ? '↓ Bearish' : '— Neutral';
+                                        
+                                        return (
+                                            <motion.a 
+                                                key={`${newsTab}-${i}`} 
+                                                href={h.url} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: i * 0.05 }}
+                                                className="group flex items-center justify-between gap-4 p-3 rounded-lg bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 hover:border-gray-200 dark:hover:border-white/10 hover:bg-gray-100/50 dark:hover:bg-white/[0.04] transition-all"
+                                            >
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-xs sm:text-sm font-medium text-text-primary leading-relaxed line-clamp-2 group-hover:text-accent transition-colors">
+                                                        {h.title}
+                                                    </p>
+                                                    <div className="flex items-center gap-2 mt-1.5">
+                                                        <span className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase tracking-tight font-bold">
+                                                            {newsTab === 'asset' ? 'Asset Specific' : 'Global Pulse'}
+                                                        </span>
+                                                        <span className="text-[10px] text-gray-300 dark:text-zinc-700 font-bold">•</span>
+                                                        <span className="text-[10px] text-gray-400 dark:text-zinc-500">Flux Financial Feed</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-3 shrink-0">
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${sigColor}`}>
+                                                        {sigLabel}
+                                                    </span>
+                                                    <ArrowUpRight className="h-3.5 w-3.5 text-gray-300 dark:text-zinc-600 group-hover:text-accent group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                                                </div>
+                                            </motion.a>
+                                        );
+                                    })}
+
+                                    {newsTab === 'global' && globalNews.length === 0 && !loadingGlobal && (
+                                        <div className="text-center py-8 text-gray-500 text-sm">No global breaking news available at the moment.</div>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                    </div>
                 </div>
 
                 {/* RIGHT */}
-                <div className="flex flex-col gap-4 h-full">
+                <div className="flex flex-col gap-4">
                     {/* AI Sentiment */}
-                    <div className="rounded-xl border border-border bg-bg-card p-5 shrink-0">
+                    <div className="rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none p-5 shrink-0">
                         <div className="flex items-center gap-2 mb-3">
                             <Brain className="h-4 w-4 text-accent-muted" strokeWidth={1.5} aria-hidden="true" />
                             <h2 className="text-sm font-sans font-semibold text-text-primary">AI Sentiment</h2>
-                            <span className="ml-auto text-[10px] text-text-disabled">FinBERT</span>
+                            <span className="ml-auto text-[10px] text-gray-500 dark:text-zinc-400 font-medium">FinBERT</span>
                         </div>
                         <div className="mb-3">
                             <div className="flex justify-between text-xs mb-1.5">
@@ -279,17 +400,17 @@ export const AnalysisPage = () => {
                                 {sigBadge(sentScore > 0.15 ? 'bull' : sentScore < -0.15 ? 'bear' : 'neutral')}
                             </div>
                         </div>
-                        <div className="border-t border-border pt-3 space-y-2">
-                            <span className="text-[10px] text-text-disabled uppercase tracking-wider font-semibold">Headlines</span>
+                        <div className="border-t border-gray-200 dark:border-white/5 pt-3 space-y-2.5">
+                            <span className="text-[10px] text-gray-500 dark:text-zinc-400 uppercase font-bold tracking-wider">Headlines</span>
                             {(data.headlines ?? []).slice(0, 3).map((h: { title: string; url: string }, i: number) => {
                                 const t = h.title.toLowerCase();
                                 const bull = ['surge', 'jump', 'rise', 'gain', 'high', 'growth', 'rally', 'buy'].some(w => t.includes(w));
                                 const bear = ['fall', 'drop', 'crash', 'low', 'loss', 'slide', 'slump', 'fear'].some(w => t.includes(w));
-                                const dot = bull ? 'bg-success' : bear ? 'bg-danger' : 'bg-warning';
+                                const dot = bull ? 'bg-success shadow-[0_0_8px_rgba(34,197,94,0.4)]' : bear ? 'bg-danger shadow-[0_0_8px_rgba(239,68,68,0.4)]' : 'bg-warning shadow-[0_0_8px_rgba(234,179,8,0.4)]';
                                 return (
                                     <a key={i} href={h.url} target="_blank" rel="noopener noreferrer"
-                                        className="flex items-start gap-2 group">
-                                        <span className={`mt-[6px] h-1.5 w-1.5 rounded-full shrink-0 ${dot}`} aria-hidden="true" />
+                                        className="flex items-start gap-3 group bg-gray-50/50 dark:bg-white/[0.02] p-2 rounded-lg border border-transparent hover:border-gray-200 dark:hover:border-white/10 transition-all">
+                                        <span className={`mt-[6px] h-2 w-2 rounded-full shrink-0 ${dot}`} aria-hidden="true" />
                                         <p className="text-xs text-text-tertiary leading-relaxed line-clamp-2 group-hover:text-text-primary transition-colors">
                                             {h.title}
                                         </p>
@@ -301,14 +422,14 @@ export const AnalysisPage = () => {
 
                     {/* Risk Boundaries */}
                     {rm && (
-                        <div className="rounded-xl border border-border bg-bg-card p-5 shrink-0 flex-1 flex flex-col justify-center">
+                        <div className="rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none p-5 shrink-0">
                             <div className="flex items-center gap-2 mb-3">
                                 <Target className="h-4 w-4 text-accent-muted" strokeWidth={1.5} aria-hidden="true" />
                                 <h2 className="text-sm font-sans font-semibold text-text-primary">Risk Boundaries</h2>
                             </div>
                             <div className="space-y-2">
-                                <div className="flex items-center justify-between rounded-lg bg-bg-elevated/50 px-4 py-2.5">
-                                    <span className="text-xs text-text-disabled uppercase font-semibold">Pivot</span>
+                                <div className="flex items-center justify-between rounded-lg bg-gray-100 dark:bg-bg-elevated/50 px-4 py-2.5">
+                                    <span className="text-xs text-gray-500 dark:text-zinc-400 uppercase font-bold">Pivot</span>
                                     <span className="text-sm font-bold font-mono-num text-text-primary">{c}{rm.pivot.toLocaleString()}</span>
                                 </div>
                                 <div className="flex items-center justify-between rounded-lg bg-success/5 border border-success/15 px-4 py-2.5">
@@ -329,7 +450,7 @@ export const AnalysisPage = () => {
 
                     {/* Signals */}
                     {(analysis.strengths.length > 0 || analysis.warnings.length > 0) && (
-                        <div className="rounded-xl border border-border bg-bg-card p-5 shrink-0">
+                        <div className="rounded-xl bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-none p-5 shrink-0">
                             <h2 className="text-sm font-sans font-semibold text-text-primary flex items-center gap-2 mb-3">
                                 <Zap className="h-4 w-4 text-warning" strokeWidth={1.5} aria-hidden="true" />
                                 Consensus Signals
@@ -352,53 +473,22 @@ export const AnalysisPage = () => {
                     )}
                 </div>
             </div>
+            
+            {/* ── Custom Scrollbar ── */}
 
-            {/* ── Collapsible News ── */}
-            <div className="rounded-xl border border-border bg-bg-card">
-                <button
-                    onClick={() => setNewsOpen(o => !o)}
-                    className="w-full flex items-center justify-between px-5 py-3.5 min-h-[44px]"
-                    aria-expanded={newsOpen}
-                    aria-controls="news-panel"
-                >
-                    <span className="text-sm font-sans font-semibold text-text-primary flex items-center gap-2">
-                        <Newspaper className="h-4 w-4 text-accent-muted" strokeWidth={1.5} aria-hidden="true" />
-                        News Feed
-                        <span className="text-text-disabled font-normal">({data.headlines?.length ?? 0})</span>
-                    </span>
-                    {newsOpen
-                        ? <ChevronUp className="h-4 w-4 text-text-disabled" strokeWidth={1.5} aria-hidden="true" />
-                        : <ChevronDown className="h-4 w-4 text-text-disabled" strokeWidth={1.5} aria-hidden="true" />}
-                </button>
-                <AnimatePresence>
-                    {newsOpen && (
-                        <motion.div
-                            id="news-panel"
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden border-t border-border"
-                        >
-                            <div className="p-5 space-y-3" role="feed" aria-label="News headlines">
-                                {(data.headlines ?? []).map((h: { title: string; url: string }, i: number) => {
-                                    const t = h.title.toLowerCase();
-                                    const bull = ['surge', 'jump', 'rise', 'gain', 'high', 'growth', 'rally', 'buy'].some(w => t.includes(w));
-                                    const bear = ['fall', 'drop', 'crash', 'low', 'loss', 'slide', 'slump', 'fear'].some(w => t.includes(w));
-                                    const sigColor = bull ? 'text-success' : bear ? 'text-danger' : 'text-warning';
-                                    const sigLabel = bull ? '↑ Bullish' : bear ? '↓ Bearish' : '— Neutral';
-                                    return (
-                                        <a key={i} href={h.url} target="_blank" rel="noopener noreferrer"
-                                            className="group flex items-start justify-between gap-3 pb-3 border-b border-border/30 last:border-0 last:pb-0">
-                                            <p className="text-sm text-text-tertiary leading-relaxed group-hover:text-text-primary transition-colors">{h.title}</p>
-                                            <span className={`text-xs font-bold shrink-0 ${sigColor}`}>{sigLabel}</span>
-                                        </a>
-                                    );
-                                })}
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+            
+            {/* ── Custom Scrollbar ── */}
+            <style dangerouslySetInnerHTML={{ __html: `
+                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { 
+                    background: rgba(155, 155, 155, 0.2); 
+                    border-radius: 4px; 
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { 
+                    background: rgba(155, 155, 155, 0.4); 
+                }
+            `}} />
         </motion.div>
     );
 };

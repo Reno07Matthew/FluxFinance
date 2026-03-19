@@ -9,7 +9,7 @@ import { MarketProvider, useMarket } from '@/context/MarketContext';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { searchAssets, SearchResult, analyzeAsset } from '@/services/api';
-import { BloombergDashboard } from '@/app/components/BloombergDashboard';
+import { BloombergDashboard } from './components/BloombergDashboard';
 import { AnalysisPage } from '@/app/components/AnalysisPage';
 import { Markets } from '@/app/components/Markets';
 import { Portfolio } from '@/app/components/Portfolio';
@@ -49,7 +49,7 @@ function Sidebar({ currentPage, onNavigate }: { currentPage: string; onNavigate:
           return (
             <button key={item.id} onClick={() => onNavigate(item.id)}
               className={`group relative w-full flex items-center justify-center h-12 transition-all duration-200
-                ${active ? 'bg-white/5 text-white border-l-2 border-white' : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5 border-l-2 border-transparent'}`}
+                ${active ? 'bg-gray-200 text-black dark:bg-white/5 dark:text-white border-l-2 border-black dark:border-white' : 'text-gray-500 hover:text-gray-900 dark:text-zinc-500 dark:hover:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/5 border-l-2 border-transparent'}`}
               aria-current={active ? 'page' : undefined} aria-label={item.label}>
               <Icon className="h-5 w-5" strokeWidth={1.5} />
               {/* Tooltip */}
