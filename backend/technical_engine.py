@@ -51,8 +51,10 @@ def calculate_flux_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df['R1']    = (2 * df['Pivot']) - prev_low    # Target / Exit
     df['S1']    = (2 * df['Pivot']) - prev_high   # Stop-Loss
 
-    # Drop rows with NaN (mostly from the 200-day SMA)
-    df.dropna(inplace=True)
+    # Drop rows where critical indicators (like RSI) are NaN.
+    # We do NOT drop everything (like SMA_200) because short timeframes (1mo) 
+    # would result in an empty dataframe otherwise.
+    df.dropna(subset=['RSI'], inplace=True)
     return df
 
 

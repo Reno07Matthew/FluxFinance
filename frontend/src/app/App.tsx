@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Search, Sun, Moon, LogOut, User, ChevronDown,
   LayoutDashboard, LineChart, Briefcase, BookOpen, Settings,
-  ArrowUpRight, ArrowDownRight
+  ArrowUpRight, ArrowDownRight, Play
 } from 'lucide-react';
 import { MarketProvider, useMarket } from '@/context/MarketContext';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
@@ -14,6 +14,7 @@ import { AnalysisPage } from '@/app/components/AnalysisPage';
 import { Markets } from '@/app/components/Markets';
 import { Portfolio } from '@/app/components/Portfolio';
 import { AuthPage } from '@/app/components/AuthPage';
+import { BacktestPage } from '@/app/components/BacktestPage';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SIDEBAR NAVIGATION  (80px narrow, icon-only)
@@ -24,6 +25,7 @@ const sidebarItems = [
   { id: 'Analysis', icon: LineChart, label: 'Screener' },
   { id: 'Markets', icon: BookOpen, label: 'Markets' },
   { id: 'Portfolio', icon: Briefcase, label: 'Portfolio' },
+  { id: 'Backtest', icon: Play, label: 'Backtester' },
 ];
 
 function Sidebar({ currentPage, onNavigate }: { currentPage: string; onNavigate: (p: string) => void }) {
@@ -147,7 +149,7 @@ function PageHeader({ page, onNavigate, onAnalyze }: { page: string; onNavigate:
   const boxRef = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const titles: Record<string, string> = { Home: 'Flux Overview', Markets: 'Markets', Portfolio: 'Portfolio', Analysis: 'Analysis' };
+  const titles: Record<string, string> = { Home: 'Flux Overview', Markets: 'Markets', Portfolio: 'Portfolio', Analysis: 'Analysis', Backtest: 'Backtester' };
 
   useEffect(() => {
     if (!search.trim()) { setResults([]); setOpen(false); return; }
@@ -265,6 +267,7 @@ function AppContent() {
       if (!user) return <AuthPage />;
       return <Portfolio />;
     }
+    if (page === 'Backtest') return <BacktestPage />;
     if (loading) return <Spinner label={`Analyzing ${symbol}…`} sub="Running 7 indicators · FinBERT NLP" />;
     if (error) return (
       <div className="rounded-xl border border-danger/30 bg-danger/5 p-6 text-center max-w-sm mx-auto mt-16">

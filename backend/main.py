@@ -33,11 +33,18 @@ def search(q: str = ""):
     results = search_symbols(q)
     return {"results": results}
 
-@app.get("/market-news")
+@app.get("/market_news")
 def market_news():
     """Get global breaking market news."""
     from data_provider import get_global_market_news
     return {"headlines": get_global_market_news()}
+
+@app.get("/markets")
+def markets(category: str = "stock"):
+    """Get batch market data for a category."""
+    from data_provider import get_batch_market_data
+    assets = get_batch_market_data(category)
+    return {"assets": assets}
 
 @app.get("/portfolio/prices")
 def portfolio_prices(symbols: str = ""):
@@ -204,6 +211,40 @@ def analyze(symbol: str, type: str = "stock"):
         }
 
     except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/backtest")
+def backtest(symbol: str, type: str = "stock", period: str = "1y", initial_capital: float = 100000.0):
+    """
+    Run a strategy backtest for a specific asset and period.
+    Returns metrics, equity curve, and trade log.
+    """
+    try:
+        from backtest_engine import run_backtest
+        from data_provider import INDEX_SYMBOLS, INDIAN_STOCKS, flatten_hist
+        
+        # 1. Fetch historical data
+        sym_upper = symbol.upper().replace('.NS', '').replace('.BO', '')
+        if sym_upper in INDEX_SYMBOLS:
+            yf_sym = INDEX_SYMBOLS[sym_upper]
+        elif sym_upper in INDIAN_STOCKS:
+            yf_sym = f"{sym_upper}.NS"
+        else:
+            yf_sym = sym_upper
+
+        stock = yf.Ticker(yf_sym)
+        df = flatten_hist(stock.history(period=period))
+
+        if df.empty:
+            return {"error": f"No historical data found for {symbol}"}
+
+        # 2. Run simulation
+        results = run_backtest(df, initial_capital=initial_capital)
+        return results
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         return {"error": str(e)}
 
 

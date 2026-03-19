@@ -109,6 +109,23 @@ SEARCHABLE_ASSETS = {
     'TRENT': {'name': 'Trent (Westside)', 'type': 'stock', 'exchange': 'NSE'},
     'IRCTC': {'name': 'IRCTC', 'type': 'stock', 'exchange': 'NSE'},
     'HAL': {'name': 'Hindustan Aeronautics', 'type': 'stock', 'exchange': 'NSE'},
+    'NFLX': {'name': 'Netflix, Inc.', 'type': 'stock', 'exchange': 'NASDAQ'},
+    
+    # Global Tech (US)
+    'AAPL': {'name': 'Apple Inc.', 'type': 'stock', 'exchange': 'NASDAQ'},
+    'MSFT': {'name': 'Microsoft Corp.', 'type': 'stock', 'exchange': 'NASDAQ'},
+    'TSLA': {'name': 'Tesla, Inc.', 'type': 'stock', 'exchange': 'NASDAQ'},
+    'NVDA': {'name': 'NVIDIA Corp.', 'type': 'stock', 'exchange': 'NASDAQ'},
+    'AMZN': {'name': 'Amazon.com, Inc.', 'type': 'stock', 'exchange': 'NASDAQ'},
+    'GOOGL': {'name': 'Alphabet Inc. (Google)', 'type': 'stock', 'exchange': 'NASDAQ'},
+    'META': {'name': 'Meta Platforms (Facebook)', 'type': 'stock', 'exchange': 'NASDAQ'},
+    
+    # Crypto
+    'BTC': {'name': 'Bitcoin', 'type': 'crypto', 'exchange': 'Binance'},
+    'ETH': {'name': 'Ethereum', 'type': 'crypto', 'exchange': 'Binance'},
+    'SOL': {'name': 'Solana', 'type': 'crypto', 'exchange': 'Binance'},
+    'BNB': {'name': 'Binance Coin', 'type': 'crypto', 'exchange': 'Binance'},
+
     # Indices
     'NIFTY': {'name': 'Nifty 50 Index', 'type': 'stock', 'exchange': 'NSE'},
     'SENSEX': {'name': 'BSE Sensex Index', 'type': 'stock', 'exchange': 'BSE'},

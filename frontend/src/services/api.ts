@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { supabase } from '@/lib/supabase';
 
-const API_BASE = 'http://127.0.0.1:8000';
+const API_BASE = '/api';
 
 // Attach Supabase auth token to every request
 axios.interceptors.request.use(async (config) => {
@@ -117,5 +117,44 @@ export const checkHealth = async () => {
 export const getGlobalMarketNews = async (): Promise<{ title: string; url: string; av_sentiment_score?: number }[]> => {
     const response = await axios.get(`${API_BASE}/market_news`);
     return response.data.headlines;
+};
+
+export interface BacktestResult {
+    metrics: {
+        total_return: number;
+        win_rate: number;
+        max_drawdown: number;
+        sharpe_ratio: number;
+        num_trades: number;
+        avg_trade_return: number;
+        profit_factor: number | null;
+        avg_win: number;
+        avg_loss: number;
+        annualized_return: number;
+        expectancy: number;
+        wins: number;
+        losses: number;
+    };
+    trade_log: Array<{
+        entry_date: string;
+        exit_date: string;
+        entry_price: number;
+        exit_price: number;
+        return_pct: number;
+        profit: number;
+        outcome: 'WIN' | 'LOSS';
+    }>;
+    equity_curve: Array<{
+        date: string;
+        portfolio_value: number;
+        in_position: boolean;
+    }>;
+}
+
+export const runBacktest = async (symbol: string, period: string = '1y', initialCapital: number = 100000): Promise<BacktestResult> => {
+    const response = await axios.get(`${API_BASE}/backtest`, {
+        params: { symbol, period, initial_capital: initialCapital }
+    });
+    return response.data;
 };
 
